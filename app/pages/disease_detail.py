@@ -5,27 +5,36 @@ from components.layout import load_styles, top_bar
 DISEASE_DATA = {
     "huntington": {
         "title": "Enfermedad de Huntington",
-        "concept": "La enfermedad de Huntington es un trastorno neurodegenerativo hereditario asociado a una expansión de repeticiones CAG en el gen HTT.",
-        "symptoms": "Puede causar alteraciones motoras, cognitivas y conductuales.",
-        "causes": "Su causa principal es una mutación por expansión de tripletes CAG.",
-        "reference_sequence": "CAG CAG CAG CAG CAG",
-        "mutated_sequence": "CAG CAG CAG CAG CAG CAG CAG CAG CAG"
+        "gene": "HTT",
+        "accession_id": "NM_002111",
+        "mutation_pattern": "CAG",
+        "concept": "Trastorno neurodegenerativo hereditario asociado a una expansión de repeticiones CAG en el gen HTT.",
+        "symptoms": "Movimientos involuntarios, deterioro cognitivo y alteraciones conductuales.",
+        "causes": "Expansión anormal del triplete CAG.",
+        "reference_sequence": "CAGCAGCAGCAGCAG",
+        "mutated_sequence": "CAGCAGCAGCAGCAGCAGCAGCAG"
     },
     "anemia_falciforme": {
         "title": "Anemia falciforme",
-        "concept": "La anemia falciforme es una enfermedad hereditaria que altera la estructura de la hemoglobina.",
-        "symptoms": "Puede causar fatiga, dolor, infecciones frecuentes y problemas circulatorios.",
-        "causes": "Se produce por una mutación puntual en el gen HBB.",
-        "reference_sequence": "GAG",
-        "mutated_sequence": "GTG"
+        "gene": "HBB",
+        "accession_id": "NM_000518",
+        "mutation_pattern": "GAG>GTG",
+        "concept": "Enfermedad hereditaria causada por una alteración en el gen HBB, que modifica la hemoglobina.",
+        "symptoms": "Fatiga, dolor, anemia, infecciones frecuentes y problemas circulatorios.",
+        "causes": "Mutación puntual en el gen HBB. El codón GAG puede cambiar a GTG, alterando el aminoácido producido.",
+        "reference_sequence": "ATGGTGCACCTGACTCCTGAGGAGAAGTCT",
+        "mutated_sequence": "ATGGTGCACCTGACTCCTGTGGAGAAGTCT"
     },
     "fibrosis_quistica": {
         "title": "Fibrosis quística",
-        "concept": "La fibrosis quística es una enfermedad genética que afecta principalmente pulmones y sistema digestivo.",
-        "symptoms": "Puede causar tos persistente, infecciones respiratorias y problemas digestivos.",
-        "causes": "Está asociada a mutaciones en el gen CFTR.",
-        "reference_sequence": "ATC TTT GGT",
-        "mutated_sequence": "ATC GGT"
+        "gene": "CFTR",
+        "accession_id": "NM_000492",
+        "mutation_pattern": "Deleción F508",
+        "concept": "Enfermedad genética que afecta principalmente pulmones y sistema digestivo por alteraciones en el gen CFTR.",
+        "symptoms": "Tos persistente, infecciones respiratorias, mucosidad espesa y problemas digestivos.",
+        "causes": "Mutaciones en el gen CFTR. Una de las más conocidas es la deleción F508.",
+        "reference_sequence": "ATCATCTTTGGTGTTTCCTATGATGAATATAG",
+        "mutated_sequence": "ATCATCGGTGTTTCCTATGATGAATATAG"
     }
 }
 
