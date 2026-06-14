@@ -32,7 +32,7 @@ def register_page():
             return
 
         if not is_academic_email(email):
-            st.error("Debe ingresar un correo académico válido (.edu o .edu.pe).")
+            st.error("Debe ingresar un correo académico válido.")
             return
 
         if not university.strip():
