@@ -24,7 +24,7 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 if "selected_disease" not in st.session_state:
-    st.session_state.selected_disease = None
+    st.session_state.selected_disease = "huntington"
 
 
 if st.session_state.page == "login":
@@ -56,3 +56,7 @@ elif st.session_state.page == "transcription":
 
 elif st.session_state.page == "mutation_recognition":
     mutation_recognition_page()
+
+else:
+    st.session_state.page = "login"
+    st.rerun()

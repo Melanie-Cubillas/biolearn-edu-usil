@@ -1,29 +1,11 @@
 import streamlit as st
+
 from components.layout import load_styles, top_bar
-
-
-QUESTIONS = [
-    {
-        "question": "¿Qué molécula almacena la información genética?",
-        "options": ["ARN", "ADN", "Proteína", "Glucosa"],
-        "answer": "ADN"
-    },
-    {
-        "question": "¿Qué base del ADN se reemplaza por uracilo en el ARN?",
-        "options": ["Adenina", "Timina", "Citosina", "Guanina"],
-        "answer": "Timina"
-    },
-    {
-        "question": "¿Qué representa un codón?",
-        "options": [
-            "Un grupo de tres nucleótidos",
-            "Una proteína completa",
-            "Una célula",
-            "Una enfermedad"
-        ],
-        "answer": "Un grupo de tres nucleótidos"
-    }
-]
+from services.supabase_service import (
+    is_supabase_configured,
+    get_quiz_questions,
+    save_quiz_result
+)
 
 
 def quiz_page():
@@ -31,35 +13,111 @@ def quiz_page():
     top_bar()
 
     st.title("Pon a prueba tus conocimientos")
+    st.write("Responde preguntas aleatorias del banco de preguntas.")
 
-    answers = []
+    if not is_supabase_configured():
+        st.error("Supabase no está configurado. Revisa el archivo .env")
+        return
 
-    for index, item in enumerate(QUESTIONS):
-        st.subheader(f"Pregunta {index + 1}")
-        response = st.radio(
-            item["question"],
-            item["options"],
-            key=f"question_{index}"
-        )
-        answers.append(response)
+    user = st.session_state.get("user")
 
-    if st.button("Enviar respuestas"):
-        score = 0
+    if not user:
+        st.warning("Debes iniciar sesión para resolver el quiz.")
+        if st.button("Ir al login"):
+            st.session_state.page = "login"
+            st.rerun()
+        return
 
-        for index, item in enumerate(QUESTIONS):
-            if answers[index] == item["answer"]:
-                score += 1
+    try:
+        if "quiz_questions" not in st.session_state:
+            st.session_state.quiz_questions = get_quiz_questions(limit=5)
+            st.session_state.quiz_submitted = False
 
-        st.success(f"Tu puntaje es {score}/{len(QUESTIONS)}")
+        questions = st.session_state.quiz_questions
 
-        if score == len(QUESTIONS):
-            st.balloons()
-            st.write("Excelente. Dominas los conceptos básicos.")
-        elif score >= 2:
-            st.info("Buen avance. Revisa los temas donde tuviste dudas.")
-        else:
-            st.warning("Te recomendamos revisar los tutoriales antes de intentarlo nuevamente.")
+        if not questions:
+            st.warning("No hay preguntas registradas en Supabase.")
+            return
+
+        selected_answers = {}
+
+        for index, question in enumerate(questions):
+            st.markdown(f"### Pregunta {index + 1}")
+            st.write(question["question"])
+
+            topic = question.get("topic", "General")
+            difficulty = question.get("difficulty", "Básico")
+            st.caption(f"Tema: {topic} | Nivel: {difficulty}")
+
+            options = question.get("quiz_options", [])
+
+            option_map = {
+                option["option_text"]: option
+                for option in options
+            }
+
+            selected_label = st.radio(
+                "Selecciona una respuesta",
+                list(option_map.keys()),
+                key=f"question_{question['id']}"
+            )
+
+            selected_answers[question["id"]] = option_map[selected_label]
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("Enviar respuestas", use_container_width=True):
+                score = 0
+
+                for question_id, selected_option in selected_answers.items():
+                    if selected_option["is_correct"]:
+                        score += 1
+
+                total = len(questions)
+
+                save_quiz_result(
+                    user_id=user["id"],
+                    score=score,
+                    total_questions=total,
+                    access_token=user["access_token"],
+                    refresh_token=user["refresh_token"]
+                )
+
+                st.session_state.quiz_score = score
+                st.session_state.quiz_total = total
+                st.session_state.quiz_submitted = True
+
+                st.rerun()
+
+        with col2:
+            if st.button("Generar nuevas preguntas", use_container_width=True):
+                st.session_state.pop("quiz_questions", None)
+                st.session_state.pop("quiz_score", None)
+                st.session_state.pop("quiz_total", None)
+                st.session_state.quiz_submitted = False
+                st.rerun()
+
+        if st.session_state.get("quiz_submitted"):
+            score = st.session_state.quiz_score
+            total = st.session_state.quiz_total
+
+            st.success(f"Tu puntaje fue {score}/{total}")
+            st.info("Tu resultado fue guardado correctamente.")
+
+            if score == total:
+                st.balloons()
+                st.write("Excelente. Dominas los conceptos básicos de bioinformática.")
+            elif score >= total / 2:
+                st.write("Buen avance. Revisa los temas donde tuviste dudas.")
+            else:
+                st.write("Te recomendamos revisar los tutoriales antes de volver a intentarlo.")
+
+    except Exception as error:
+        st.error("Ocurrió un error al cargar o guardar el quiz.")
+        st.code(str(error))
 
     if st.button("Volver al inicio"):
+        st.session_state.pop("quiz_questions", None)
         st.session_state.page = "dashboard"
         st.rerun()
