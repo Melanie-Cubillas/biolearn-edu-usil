@@ -1,4 +1,5 @@
 import os
+import random
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
@@ -7,10 +8,10 @@ load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 
+supabase = None
+
 if SUPABASE_URL and SUPABASE_ANON_KEY:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
-else:
-    supabase = None
 
 
 def is_supabase_configured() -> bool:
@@ -29,26 +30,6 @@ def login_user(email: str, password: str) -> dict:
     response = client.auth.sign_in_with_password({
         "email": email,
         "password": password
-    })
-
-    return {
-        "user": response.user,
-        "session": response.session
-    }
-
-
-def register_user(full_name: str, email: str, password: str, university: str) -> dict:
-    client = get_supabase()
-
-    response = client.auth.sign_up({
-        "email": email,
-        "password": password,
-        "options": {
-            "data": {
-                "full_name": full_name,
-                "university": university
-            }
-        }
     })
 
     return {
@@ -82,14 +63,11 @@ def get_quiz_questions(limit: int = 5) -> list:
 
     response = (
         client.table("quiz_questions")
-        .select("id, question, topic, difficulty, quiz_options(id, option_text, is_correct)")
-        .limit(50)
+        .select("id, question, topic, difficulty, explanation, quiz_options(id, option_text, is_correct)")
         .execute()
     )
 
     questions = response.data or []
-
-    import random
     random.shuffle(questions)
 
     return questions[:limit]

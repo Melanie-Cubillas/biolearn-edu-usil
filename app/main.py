@@ -14,8 +14,33 @@ from pages.mutation_recognition import mutation_recognition_page
 st.set_page_config(
     page_title="BioLearn Edu",
     page_icon="🧬",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
+
+# Ocultar menú lateral automático de Streamlit
+st.markdown("""
+<style>
+[data-testid="stSidebar"] {
+    display: none;
+}
+[data-testid="collapsedControl"] {
+    display: none;
+}
+#MainMenu {
+    visibility: hidden;
+}
+footer {
+    visibility: hidden;
+}
+header {
+    visibility: hidden;
+}
+.block-container {
+    padding-top: 0rem;
+}
+</style>
+""", unsafe_allow_html=True)
 
 if "page" not in st.session_state:
     st.session_state.page = "login"
@@ -26,37 +51,17 @@ if "user" not in st.session_state:
 if "selected_disease" not in st.session_state:
     st.session_state.selected_disease = "huntington"
 
+pages = {
+    "login": login_page,
+    "register": register_page,
+    "dashboard": dashboard_page,
+    "diseases": diseases_page,
+    "disease_detail": disease_detail_page,
+    "quiz": quiz_page,
+    "tutorials": tutorials_page,
+    "translation": translation_page,
+    "transcription": transcription_page,
+    "mutation_recognition": mutation_recognition_page,
+}
 
-if st.session_state.page == "login":
-    login_page()
-
-elif st.session_state.page == "register":
-    register_page()
-
-elif st.session_state.page == "dashboard":
-    dashboard_page()
-
-elif st.session_state.page == "diseases":
-    diseases_page()
-
-elif st.session_state.page == "disease_detail":
-    disease_detail_page()
-
-elif st.session_state.page == "quiz":
-    quiz_page()
-
-elif st.session_state.page == "tutorials":
-    tutorials_page()
-
-elif st.session_state.page == "translation":
-    translation_page()
-
-elif st.session_state.page == "transcription":
-    transcription_page()
-
-elif st.session_state.page == "mutation_recognition":
-    mutation_recognition_page()
-
-else:
-    st.session_state.page = "login"
-    st.rerun()
+pages.get(st.session_state.page, login_page)()
