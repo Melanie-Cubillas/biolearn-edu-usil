@@ -4,12 +4,33 @@ import streamlit as st
 def load_styles():
     st.markdown("""
     <style>
+    /* Ocultar solo la navegación lateral automática */
     [data-testid="stSidebar"],
     [data-testid="stSidebarNav"],
-    [data-testid="collapsedControl"],
-    header,
-    footer,
+    [data-testid="collapsedControl"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Mantener visibles las opciones superiores de Streamlit */
+    header {
+        display: block !important;
+        visibility: visible !important;
+        background: #0E1117 !important;
+        height: auto !important;
+    }
+
+    [data-testid="stToolbar"] {
+        display: flex !important;
+        visibility: visible !important;
+    }
+
     #MainMenu {
+        display: block !important;
+        visibility: visible !important;
+    }
+
+    footer {
         display: none !important;
         visibility: hidden !important;
     }
@@ -66,45 +87,57 @@ def load_styles():
     }
 
     .stTextInput > div > div > input {
-        border-radius: 16px;
-        border: 1px solid #E2E8F0;
-        background: rgba(255,255,255,0.85);
-        height: 52px;
+        border-radius: 16px !important;
+        border: 1px solid #E2E8F0 !important;
+        background: rgba(255,255,255,0.95) !important;
+        height: 54px !important;
+        color: #0F172A !important;
     }
 
     .stTextInput label {
         color: #334155 !important;
-        font-weight: 700;
+        font-weight: 700 !important;
     }
 
     .stButton > button {
-        width: 100%;
-        height: 56px;
-        border-radius: 18px;
-        border: none;
-        background: linear-gradient(135deg, #60A5FA, #8B5CF6);
-        color: white;
-        font-weight: 800;
-        transition: 0.2s ease;
+        width: 100% !important;
+        height: 58px !important;
+        border: none !important;
+        border-radius: 18px !important;
+        background: linear-gradient(135deg, #60A5FA, #8B5CF6) !important;
+        color: white !important;
+        font-size: 16px !important;
+        font-weight: 800 !important;
+        transition: all .25s ease !important;
     }
 
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 12px 24px rgba(99,102,241,0.25);
-        color: white;
+        box-shadow: 0px 10px 25px rgba(99,102,241,0.25);
+        color: white !important;
+    }
+
+    .stButton > button:focus {
+        outline: none !important;
+        box-shadow: 0 0 0 4px rgba(99,102,241,.25) !important;
     }
 
     @media (max-width: 900px) {
         .block-container {
-            padding: 1.2rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
         }
 
         .auth-title {
-            font-size: 36px;
+            font-size: 38px;
         }
 
         .auth-subtitle {
             font-size: 16px;
+        }
+
+        .brand-logo {
+            font-size: 28px;
         }
     }
     </style>
@@ -112,7 +145,10 @@ def load_styles():
 
 
 def brand_logo():
-    st.markdown("<div class='brand-logo'>BioLearn 🧬</div>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='brand-logo'>BioLearn 🧬</div>",
+        unsafe_allow_html=True
+    )
 
 
 def top_bar():
@@ -127,10 +163,23 @@ def top_bar():
         background:white;
         padding:1rem 1.5rem;
         border-radius:24px;
-        box-shadow:0 8px 24px rgba(15,23,42,0.06);
+        box-shadow:0 8px 24px rgba(15,23,42,.05);
         margin-bottom:2rem;
     ">
-        <div style="font-size:24px;font-weight:900;color:#0F172A;">BioLearn 🧬</div>
-        <div style="color:#475569;font-weight:700;">👤 {name}</div>
+        <div style="
+            font-size:28px;
+            font-weight:900;
+            color:#0F172A;
+        ">
+            BioLearn 🧬
+        </div>
+
+        <div style="
+            color:#475569;
+            font-weight:700;
+            font-size:18px;
+        ">
+            👤 {name}
+        </div>
     </div>
     """, unsafe_allow_html=True)
