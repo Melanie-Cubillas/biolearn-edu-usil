@@ -4,7 +4,6 @@ import streamlit as st
 def load_styles():
     st.markdown("""
     <style>
-    /* Ocultar solo la navegación lateral automática */
     [data-testid="stSidebar"],
     [data-testid="stSidebarNav"],
     [data-testid="collapsedControl"] {
@@ -12,12 +11,8 @@ def load_styles():
         visibility: hidden !important;
     }
 
-    /* Mantener visibles las opciones superiores de Streamlit */
     header {
-        display: block !important;
-        visibility: visible !important;
-        background: #0E1117 !important;
-        height: auto !important;
+        background: transparent !important;
     }
 
     [data-testid="stToolbar"] {
@@ -36,8 +31,8 @@ def load_styles():
     }
 
     .block-container {
-        max-width: 1400px;
-        padding: 2rem 3rem 4rem 3rem;
+        max-width: 1600px;
+        padding: 2rem 2rem 3rem 2rem;
     }
 
     .stApp {
@@ -117,11 +112,6 @@ def load_styles():
         color: white !important;
     }
 
-    .stButton > button:focus {
-        outline: none !important;
-        box-shadow: 0 0 0 4px rgba(99,102,241,.25) !important;
-    }
-
     @media (max-width: 900px) {
         .block-container {
             padding-left: 1rem;
@@ -153,21 +143,26 @@ def brand_logo():
 
 def top_bar():
     user = st.session_state.get("user", {})
-    name = user.get("name", "Estudiante")
 
-    st.markdown(f"""
+    if isinstance(user, dict):
+        name = user.get("name", "Estudiante")
+    else:
+        name = "Estudiante"
+
+    st.html(f"""
     <div style="
+        background:rgba(255,255,255,0.92);
+        border-radius:28px;
+        padding:1.4rem 2rem;
         display:flex;
         justify-content:space-between;
         align-items:center;
-        background:white;
-        padding:1rem 1.5rem;
-        border-radius:24px;
-        box-shadow:0 8px 24px rgba(15,23,42,.05);
-        margin-bottom:2rem;
+        box-shadow:0 14px 35px rgba(15,23,42,0.07);
+        border:1px solid rgba(226,232,240,0.8);
+        margin-bottom:2.8rem;
     ">
         <div style="
-            font-size:28px;
+            font-size:32px;
             font-weight:900;
             color:#0F172A;
         ">
@@ -175,11 +170,18 @@ def top_bar():
         </div>
 
         <div style="
-            color:#475569;
-            font-weight:700;
-            font-size:18px;
+            display:flex;
+            align-items:center;
+            gap:.7rem;
+            background:#FFFFFF;
+            color:#0F172A;
+            padding:.75rem 1.1rem;
+            border-radius:999px;
+            font-weight:900;
+            font-size:16px;
         ">
             👤 {name}
+            <span style="color:#64748B;"></span>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)

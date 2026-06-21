@@ -8,8 +8,18 @@ DISEASE_DATA = {
         "gene": "HTT",
         "accession_id": "NM_002111",
         "mutation_pattern": "CAG",
-        "concept": "Trastorno neurodegenerativo hereditario asociado a una expansión de repeticiones CAG en el gen HTT.",
-        "symptoms": "Movimientos involuntarios, deterioro cognitivo y alteraciones conductuales.",
+        "concept": "Trastorno neurodegenerativo hereditario de herencia autosómica dominante, causado por la expansión anormal de tripletes CAG en el gen de la huntingtina. Esta mutación provoca la acumulación de proteínas tóxicas que destruyen selectivamente el cuerpo estriado del cerebro.",
+        "symptoms": [
+            "Movimientos involuntarios (corea)",
+            "Dificultad para coordinar movimientos",
+            "Problemas de equilibrio y marcha",
+            "Deterioro cognitivo progresivo",
+            "Pérdida de memoria y concentración",
+            "Dificultad para planificar y tomar decisiones",
+            "Cambios de personalidad",
+            "Irritabilidad y alteraciones del estado de ánimo",
+            "Ansiedad y depresión"
+        ],
         "causes": "Expansión anormal del triplete CAG.",
         "reference_sequence": "CAGCAGCAGCAGCAG",
         "mutated_sequence": "CAGCAGCAGCAGCAGCAGCAGCAG"
