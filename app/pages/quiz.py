@@ -1,3 +1,4 @@
+import random
 import streamlit as st
 
 from components.layout import load_styles, top_bar
@@ -30,7 +31,14 @@ def quiz_page():
 
     try:
         if "quiz_questions" not in st.session_state:
-            st.session_state.quiz_questions = get_quiz_questions(limit=5)
+            questions = get_quiz_questions(limit=5)
+
+            for question in questions:
+                options = question.get("quiz_options", []).copy()
+                random.shuffle(options)
+                question["quiz_options"] = options
+
+            st.session_state.quiz_questions = questions
             st.session_state.quiz_submitted = False
 
         questions = st.session_state.quiz_questions
@@ -40,6 +48,7 @@ def quiz_page():
             return
 
         selected_answers = {}
+        unanswered_questions = []
 
         for index, question in enumerate(questions):
             st.markdown(f"### Pregunta {index + 1}")
@@ -59,18 +68,29 @@ def quiz_page():
             selected_label = st.radio(
                 "Selecciona una respuesta",
                 list(option_map.keys()),
+                index=None,
                 key=f"question_{question['id']}"
             )
 
-            selected_answers[question["id"]] = option_map[selected_label]
+            if selected_label is None:
+                unanswered_questions.append(index + 1)
+            else:
+                selected_answers[question["id"]] = option_map[selected_label]
 
         col1, col2 = st.columns(2)
 
         with col1:
             if st.button("Enviar respuestas", use_container_width=True):
+                if unanswered_questions:
+                    st.warning(
+                        "Debes responder todas las preguntas antes de enviar. "
+                        f"Faltan: {', '.join(map(str, unanswered_questions))}."
+                    )
+                    return
+
                 score = 0
 
-                for question_id, selected_option in selected_answers.items():
+                for selected_option in selected_answers.values():
                     if selected_option["is_correct"]:
                         score += 1
 
