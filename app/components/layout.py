@@ -1,4 +1,41 @@
+from pathlib import Path
+import unicodedata
+
 import streamlit as st
+
+
+LOGO_PATH = Path(__file__).resolve().parents[1] / "assets" / "logo.png"
+
+NAV_ITEMS = [
+    {"label": "Inicio", "page": "dashboard", "terms": ["inicio", "dashboard", "panel"]},
+    {"label": "Enfermedades", "page": "diseases", "terms": ["enfermedades", "genes", "casos clinicos"]},
+    {"label": "Transcripción", "page": "transcription", "terms": ["transcripcion", "adn", "arn", "arnm"]},
+    {"label": "Traducción", "page": "translation", "terms": ["traduccion", "proteinas", "aminoacidos", "codones"]},
+    {"label": "Mutaciones", "page": "mutation_recognition", "terms": ["mutaciones", "blast", "alineamiento"]},
+    {"label": "Quiz", "page": "quiz", "terms": ["quiz", "evaluacion", "preguntas"]},
+    {"label": "Tutoriales", "page": "tutorials", "terms": ["tutoriales", "guias", "fasta", "ncbi"]},
+]
+
+SEARCH_TARGETS = NAV_ITEMS + [
+    {
+        "label": "Enfermedad de Huntington",
+        "page": "disease_detail",
+        "disease": "huntington",
+        "terms": ["huntington", "htt", "cag", "neurodegenerativa"],
+    },
+    {
+        "label": "Anemia falciforme",
+        "page": "disease_detail",
+        "disease": "anemia_falciforme",
+        "terms": ["anemia falciforme", "hbb", "hemoglobina", "gag", "gtg"],
+    },
+    {
+        "label": "Fibrosis quística",
+        "page": "disease_detail",
+        "disease": "fibrosis_quistica",
+        "terms": ["fibrosis quistica", "cftr", "delta f508", "delecion"],
+    },
+]
 
 
 def load_styles():
@@ -303,6 +340,38 @@ def brand_logo():
     )
 
 
+def _normalize_search(value):
+    normalized = unicodedata.normalize("NFKD", value or "")
+    ascii_value = normalized.encode("ascii", "ignore").decode("ascii")
+    return ascii_value.lower().strip()
+
+
+def _find_search_matches(query, limit=4):
+    normalized_query = _normalize_search(query)
+    if not normalized_query:
+        return []
+
+    matches = []
+    for target in SEARCH_TARGETS:
+        searchable = " ".join([target["label"], *target.get("terms", [])])
+        if normalized_query in _normalize_search(searchable):
+            matches.append(target)
+
+    return matches[:limit]
+
+
+def _go_to_target(target):
+    if target.get("disease"):
+        st.session_state.selected_disease = target["disease"]
+    st.session_state.page = target["page"]
+
+
+def _handle_nav_search():
+    matches = _find_search_matches(st.session_state.get("global_nav_search", ""), limit=1)
+    if matches:
+        _go_to_target(matches[0])
+
+
 def top_bar():
     user = st.session_state.get("user", {})
     name = user.get("name", "Estudiante") if isinstance(user, dict) else "Estudiante"
@@ -344,6 +413,15 @@ def top_bar():
         line-height: 40px;
         letter-spacing: -0.02em;
     }
+
+    .nav-brand-subtitle {
+        color: #93C5FD !important;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
     .nav-user-text {
         font-size: 14.5px;
         font-weight: 700;
@@ -351,11 +429,10 @@ def top_bar():
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        height: 40px;
-        line-height: 40px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
-    </style>
-    """, unsafe_allow_html=True)
 
     with st.container():
         st.markdown('<div class="custom-nav-trigger"></div>', unsafe_allow_html=True)
