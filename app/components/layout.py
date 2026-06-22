@@ -538,6 +538,8 @@ def top_bar():
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+    </style>
+    """, unsafe_allow_html=True)
 
     with st.container():
         st.markdown('<div class="custom-nav-trigger"></div>', unsafe_allow_html=True)
