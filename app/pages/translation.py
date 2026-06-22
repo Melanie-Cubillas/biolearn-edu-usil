@@ -17,14 +17,28 @@ def translation_page():
     st.title("Traducción de Proteínas")
     st.subheader(disease["title"])
 
-    # Selector de fuente visual e inhabilitado para NCBI
+    # Selector de fuente interactivo
     st.markdown("<p style='font-size: 14.5px; font-weight: 600; color: #475569; margin-bottom: 8px;'>Fuente de la secuencia</p>", unsafe_allow_html=True)
-    st.markdown("""
-    <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1.5rem;">
-        <div style="padding: 0.5rem 1rem; background: #3B82F6; color: white; border-radius: 8px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 10px rgba(59,130,246,0.2);">Secuencia del ejemplo</div>
-        <div style="padding: 0.5rem 1rem; background: #F1F5F9; color: #94A3B8; border-radius: 8px; border: 1px dashed #CBD5E1; font-size: 14px; cursor: not-allowed;">Buscar en NCBI (Disponible próximamente)</div>
-    </div>
-    """, unsafe_allow_html=True)
+    
+    if "translation_source" not in st.session_state:
+        st.session_state["translation_source"] = "Secuencia del ejemplo"
+
+    fuente_seq = st.radio(
+        label="Fuente de la secuencia",
+        options=["Secuencia del ejemplo", "Buscar en NCBI (Exploratorio)"],
+        index=0 if st.session_state["translation_source"] == "Secuencia del ejemplo" else 1,
+        horizontal=True,
+        label_visibility="collapsed"
+    )
+
+    # Manejar cambio de fuente
+    if fuente_seq != st.session_state["translation_source"]:
+        st.session_state["translation_source"] = fuente_seq
+        if fuente_seq == "Secuencia del ejemplo":
+            if "translation_ncbi" in st.session_state:
+                del st.session_state["translation_ncbi"]
+            st.session_state["translation_dna"] = disease["mutated_sequence"].replace(" ", "")
+        st.rerun()
 
     dna = disease["mutated_sequence"].replace(" ", "")
     ncbi_data = None
@@ -32,7 +46,35 @@ def translation_page():
     dna = st.session_state.get("translation_dna", dna)
     ncbi_data = st.session_state.get("translation_ncbi", ncbi_data)
 
+    if fuente_seq == "Buscar en NCBI (Exploratorio)":
+        col_input, col_btn = st.columns([3, 1])
+        with col_input:
+            acc_id = st.text_input(
+                "Accession ID de NCBI",
+                value=disease.get("accession_id", ""),
+                key="translation_acc_id_input",
+                placeholder="Ej. NM_002111"
+            )
+        with col_btn:
+            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+            buscar_clicked = st.button("Buscar en NCBI", type="secondary", use_container_width=True)
+            
+        if buscar_clicked:
+            if acc_id:
+                with st.spinner("Buscando secuencia en NCBI..."):
+                    try:
+                        res = get_sequence(acc_id, db="nucleotide")
+                        st.session_state["translation_dna"] = res["sequence"]
+                        st.session_state["translation_ncbi"] = res
+                        st.success(f"Secuencia obtenida: {res['description'][:60]}...")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error al conectar con NCBI: {str(e)}")
+            else:
+                st.warning("Por favor, ingrese un Accession ID.")
+
     dna = st.text_area("Secuencia de ADN", value=dna, height=120)
+    st.session_state["translation_dna"] = dna
 
     if st.button("Traducir ADN a proteína", type="primary"):
         result = translate_dna_to_protein(dna)

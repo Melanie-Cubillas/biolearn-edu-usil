@@ -17,26 +17,69 @@ def mutation_recognition_page():
     st.title("Reconocimiento de mutaciones")
     st.subheader(disease["title"])
 
+    # Selector de modo interactivo
+    st.markdown("<p style='font-size: 14.5px; font-weight: 600; color: #475569; margin-bottom: 8px;'>Selecciona el modo</p>", unsafe_allow_html=True)
+    
+    if "mutation_mode" not in st.session_state:
+        st.session_state["mutation_mode"] = "Modo guiado"
+
+    modo = st.radio(
+        label="Selecciona el modo",
+        options=["Modo guiado", "Modo exploratorio (Buscar en NCBI)"],
+        index=0 if st.session_state["mutation_mode"] == "Modo guiado" else 1,
+        horizontal=True,
+        label_visibility="collapsed"
+    )
+
+    # Manejar cambio de modo
+    if modo != st.session_state["mutation_mode"]:
+        st.session_state["mutation_mode"] = modo
+        if modo == "Modo guiado":
+            if "mutation_ncbi" in st.session_state:
+                del st.session_state["mutation_ncbi"]
+            st.session_state["mutation_reference"] = disease["reference_sequence"].replace(" ", "")
+            st.session_state["mutation_sequence"] = disease["mutated_sequence"].replace(" ", "")
+        st.rerun()
+
     reference = disease["reference_sequence"].replace(" ", "")
     mutated = disease["mutated_sequence"].replace(" ", "")
 
-    # Selector de modo visual e inhabilitado para Exploratorio
-    st.markdown("<p style='font-size: 14.5px; font-weight: 600; color: #475569; margin-bottom: 8px;'>Selecciona el modo</p>", unsafe_allow_html=True)
-    st.markdown("""
-    <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1.5rem;">
-        <div style="padding: 0.5rem 1rem; background: #3B82F6; color: white; border-radius: 8px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 10px rgba(59,130,246,0.2);">Modo guiado</div>
-        <div style="padding: 0.5rem 1rem; background: #F1F5F9; color: #94A3B8; border-radius: 8px; border: 1px dashed #CBD5E1; font-size: 14px; cursor: not-allowed;">Modo exploratorio (Disponible próximamente)</div>
-    </div>
-    """, unsafe_allow_html=True)
+    reference = st.session_state.get("mutation_reference", reference)
+    mutated = st.session_state.get("mutation_sequence", mutated)
+    ncbi_data = st.session_state.get("mutation_ncbi", None)
 
-    ncbi_data = None
-    ncbi_data = st.session_state.get("mutation_ncbi", ncbi_data)
+    if modo == "Modo exploratorio (Buscar en NCBI)":
+        col_input, col_btn = st.columns([3, 1])
+        with col_input:
+            acc_id = st.text_input(
+                "Accession ID de NCBI para la referencia",
+                value=disease.get("accession_id", ""),
+                key="mutation_acc_id_input",
+                placeholder="Ej. NM_002111"
+            )
+        with col_btn:
+            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+            buscar_clicked = st.button("Buscar en NCBI", type="secondary", use_container_width=True)
 
-    if "mutation_sequence" in st.session_state:
-        mutated = st.session_state["mutation_sequence"]
+        if buscar_clicked:
+            if acc_id:
+                with st.spinner("Buscando secuencia en NCBI..."):
+                    try:
+                        res = get_sequence(acc_id, db="nucleotide")
+                        st.session_state["mutation_reference"] = res["sequence"]
+                        st.session_state["mutation_ncbi"] = res
+                        st.success(f"Secuencia de referencia obtenida: {res['description'][:60]}...")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error al conectar con NCBI: {str(e)}")
+            else:
+                st.warning("Por favor, ingrese un Accession ID.")
 
     reference = st.text_area("Secuencia referencial", value=reference, height=100)
+    st.session_state["mutation_reference"] = reference
+
     mutated = st.text_area("Secuencia mutada / analizada", value=mutated, height=100)
+    st.session_state["mutation_sequence"] = mutated
 
     if st.button("Reconocer mutaciones", type="primary"):
         result = detect_mutations(reference, mutated, disease_key=disease_key)

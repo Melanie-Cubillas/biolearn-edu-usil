@@ -180,17 +180,17 @@ def load_styles():
     }
 
     /* Inputs */
-    .stTextInput > div > div > input {
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea {
         border-radius: 10px !important;
-        border: 1px solid #E2E8F0 !important;
+        border: 1px solid #CBD5E1 !important;
         background: #FFFFFF !important;
-        height: 40px !important;
         color: #0F172A !important;
         font-size: 14.5px !important;
-        padding: 0 1rem !important;
         transition: all 0.2s ease-in-out !important;
     }
-    .stTextInput > div > div > input:focus {
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
         border-color: #4F46E5 !important;
         box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
     }
@@ -261,16 +261,18 @@ def load_styles():
     /* Botón Secundario */
     .stButton > button[kind="secondary"],
     .stButton > button.stBaseButton-secondary {
-        border: 1px solid #D8E2EF !important;
+        border: 1px solid #CBD5E1 !important;
         background: #FFFFFF !important;
         color: #4F46E5 !important;
         font-weight: 600 !important;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06) !important;
     }
     .stButton > button[kind="secondary"]:hover,
     .stButton > button.stBaseButton-secondary:hover {
         border-color: #4F46E5 !important;
-        background: rgba(99, 102, 241, 0.04) !important;
+        background: rgba(99, 102, 241, 0.05) !important;
         color: #4F46E5 !important;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12) !important;
     }
 
     /* Responsividad */
@@ -306,21 +308,46 @@ def top_bar():
     name = user.get("name", "Estudiante") if isinstance(user, dict) else "Estudiante"
     current_page = st.session_state.get("page", "dashboard")
 
+    # Determinar destino de retroceso
+    back_target = None
+    if current_page == "diseases":
+        back_target = "dashboard"
+    elif current_page == "disease_detail":
+        back_target = "diseases"
+    elif current_page in ["transcription", "translation", "mutation_recognition"]:
+        back_target = "disease_detail"
+    elif current_page in ["quiz", "tutorials"]:
+        back_target = "dashboard"
+
     st.markdown("""
     <style>
+    /* Estilos del Header Premium */
+    div[data-testid="stVerticalBlock"]:has(.custom-nav-trigger) {
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(226, 232, 240, 0.9) !important;
+        border-radius: 20px !important;
+        padding: 0.8rem 1.6rem !important;
+        margin-bottom: 2rem !important;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04) !important;
+    }
     .nav-logo-text {
         font-size: 24px;
         font-weight: 800;
-        color: #0F172A;
+        background: linear-gradient(135deg, #1E3A8A 0%, #4F46E5 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         display: flex;
         align-items: center;
         height: 40px;
         line-height: 40px;
+        letter-spacing: -0.02em;
     }
     .nav-user-text {
         font-size: 14.5px;
-        font-weight: 600;
-        color: #475569;
+        font-weight: 700;
+        color: #475569 !important;
         display: flex;
         align-items: center;
         justify-content: flex-end;
@@ -330,28 +357,44 @@ def top_bar():
     </style>
     """, unsafe_allow_html=True)
 
-    col_logo, col_nav1, col_nav2, col_nav3, col_user = st.columns([2.5, 1, 1, 1, 2.5])
+    with st.container():
+        st.markdown('<div class="custom-nav-trigger"></div>', unsafe_allow_html=True)
+        col_back, col_logo, col_nav_home, col_nav_learn, col_nav_quiz, col_nav_tut, col_user = st.columns([1, 1.8, 1, 2.2, 1, 1.1, 1.8])
 
-    with col_logo:
-        st.markdown("<div class='nav-logo-text'>BioLearn</div>", unsafe_allow_html=True)
+        with col_back:
+            if back_target:
+                if st.button("← Atrás", key="nav_btn_back", use_container_width=True, type="secondary"):
+                    st.session_state.page = back_target
+                    st.rerun()
+            else:
+                st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
 
-    with col_nav1:
-        is_active = current_page in ["dashboard", "diseases", "disease_detail", "translation", "transcription", "mutation_recognition"]
-        if st.button("Inicio", key="nav_btn_home", use_container_width=True, type="primary" if is_active else "secondary"):
-            st.session_state.page = "dashboard"
-            st.rerun()
+        with col_logo:
+            st.markdown("<div class='nav-logo-text'>BioLearn</div>", unsafe_allow_html=True)
 
-    with col_nav2:
-        is_active = current_page == "quiz"
-        if st.button("Quiz", key="nav_btn_quiz", use_container_width=True, type="primary" if is_active else "secondary"):
-            st.session_state.page = "quiz"
-            st.rerun()
+        with col_nav_home:
+            is_active = current_page == "dashboard"
+            if st.button("Inicio", key="nav_btn_home", use_container_width=True, type="primary" if is_active else "secondary"):
+                st.session_state.page = "dashboard"
+                st.rerun()
 
-    with col_nav3:
-        is_active = current_page == "tutorials"
-        if st.button("Tutoriales", key="nav_btn_tutorials", use_container_width=True, type="primary" if is_active else "secondary"):
-            st.session_state.page = "tutorials"
-            st.rerun()
+        with col_nav_learn:
+            is_active = current_page in ["diseases", "disease_detail", "translation", "transcription", "mutation_recognition"]
+            if st.button("Aprende Bioinformática", key="nav_btn_learn", use_container_width=True, type="primary" if is_active else "secondary"):
+                st.session_state.page = "diseases"
+                st.rerun()
 
-    with col_user:
-        st.markdown(f"<div class='nav-user-text'>{name}</div>", unsafe_allow_html=True)
+        with col_nav_quiz:
+            is_active = current_page == "quiz"
+            if st.button("Quiz", key="nav_btn_quiz", use_container_width=True, type="primary" if is_active else "secondary"):
+                st.session_state.page = "quiz"
+                st.rerun()
+
+        with col_nav_tut:
+            is_active = current_page == "tutorials"
+            if st.button("Tutoriales", key="nav_btn_tutorials", use_container_width=True, type="primary" if is_active else "secondary"):
+                st.session_state.page = "tutorials"
+                st.rerun()
+
+        with col_user:
+            st.markdown(f"<div class='nav-user-text'>{name}</div>", unsafe_allow_html=True)

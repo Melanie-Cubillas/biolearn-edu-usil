@@ -3,17 +3,19 @@ import streamlit as st
 from components.layout import load_styles, top_bar
 
 
-def module_card(icon, title, description, badge, bg_color, border_color, target_page, button_text, progress_value):
+def module_card(icon_html, title, description, badge, bg_color, border_color, target_page, button_text, progress_value):
     st.markdown(
         f"""
-        <div class="module-card" style="background:{bg_color}; border:1px solid {border_color};">
-            <div class="module-icon" style="font-size: 13px; font-weight: 800; color: #4F46E5;">{icon}</div>
-            <div class="module-arrow">↗</div>
-            <div>
-                <h3 style="margin-top: 10px; margin-bottom: 5px;">{title}</h3>
-                <p>{description}</p>
+        <div class="module-card" style="background:{bg_color}; border:1px solid {border_color}; display: flex; flex-direction: column; justify-content: space-between; min-height: 240px; border-radius: 20px; padding: 1.5rem; position: relative; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                {icon_html}
+                <div class="module-arrow" style="font-size: 20px; color: #64748B;">↗</div>
             </div>
-            <span class="module-badge">{badge}</span>
+            <div style="margin-top: 1.2rem; margin-bottom: 1.2rem; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                <h3 style="margin: 0 0 6px 0; font-size: 20px; color: #0F172A; font-weight: 700; line-height: 1.25;">{title}</h3>
+                <p style="margin: 0; color: #475569; font-size: 14px; line-height: 1.5;">{description}</p>
+            </div>
+            <span class="module-badge" style="background: white; border: 1px solid #E2E8F0; padding: .3rem .75rem; border-radius: 999px; color: #475569; font-size: 12px; font-weight: 600; width: fit-content; display: inline-block;">{badge}</span>
         </div>
         """,
         unsafe_allow_html=True
@@ -300,87 +302,53 @@ def dashboard_page():
         unsafe_allow_html=True
     )
 
-    # SECCIÓN 1: Módulos de Análisis
-    st.markdown("<div class='section-label'>Módulos de Análisis</div>", unsafe_allow_html=True)
-    col_a1, col_a2, col_a3 = st.columns(3, gap="large")
+    # MÓDULOS PRINCIPALES
+    st.markdown("<div class='section-label'>Módulos Principales</div>", unsafe_allow_html=True)
+    col_m1, col_m2, col_m3 = st.columns(3, gap="large")
 
-    with col_a1:
+    with col_m1:
+        book_svg = """<div style="background: #E0F2FE; color: #2563EB; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>"""
         module_card(
-            icon="TRN",
-            title="Transcripción de ADN",
-            description="Transcribe secuencias de ADN a ARN mensajero (ARNm) e identifica codones de parada.",
-            badge="Módulo 1",
-            bg_color="#E0F2FE",
-            border_color="#BAE6FD",
-            target_page="transcription",
-            button_text="Iniciar transcripción",
-            progress_value=30
-        )
-
-    with col_a2:
-        module_card(
-            icon="TRD",
-            title="Traducción de Proteínas",
-            description="Convierte secuencias de ARNm en aminoácidos y visualiza las conversiones de codones.",
-            badge="Módulo 2",
-            bg_color="#F3E8FF",
-            border_color="#E9D5FF",
-            target_page="translation",
-            button_text="Iniciar traducción",
-            progress_value=60
-        )
-
-    with col_a3:
-        module_card(
-            icon="MUT",
-            title="Reconocimiento de Mutaciones",
-            description="Compara secuencias contra una referencia para detectar e interpretar mutaciones.",
-            badge="Módulo 3",
-            bg_color="#DCFCE7",
-            border_color="#BBF7D0",
-            target_page="mutation_recognition",
-            button_text="Iniciar análisis",
-            progress_value=90
-        )
-
-    # SECCIÓN 2: Recursos y Autoevaluación
-    st.markdown("<div class='section-label'>Recursos y Autoevaluación</div>", unsafe_allow_html=True)
-    col_r1, col_r2, col_r3 = st.columns(3, gap="large")
-
-    with col_r1:
-        module_card(
-            icon="GEN",
-            title="Base de Enfermedades",
-            description="Explora la base genética molecular de Huntington, anemia falciforme y fibrosis quística.",
-            badge="3 Casos Clínicos",
-            bg_color="#F8FAFC",
-            border_color="#E2E8F0",
+            icon_html=book_svg,
+            title="Aprende sobre Bioinformática",
+            description="Explora enfermedades genéticas reales, secuencias de ADN y procesos moleculares.",
+            badge="12 lecciones",
+            bg_color="#EFF6FF",
+            border_color="#DBEAFE",
             target_page="diseases",
             button_text="Ver enfermedades",
             progress_value=20
         )
 
-    with col_r2:
+    with col_m2:
+        brain_svg = """<div style="background: #F3E8FF; color: #7C3AED; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M12 5v14"/></svg>
+        </div>"""
         module_card(
-            icon="EVL",
-            title="Quiz Académico",
-            description="Prueba tus conocimientos con un banco de preguntas dinámicas y explicaciones.",
-            badge="Evaluación",
-            bg_color="#FFF7ED",
-            border_color="#FFEDD5",
+            icon_html=brain_svg,
+            title="Pon a prueba tus conocimientos",
+            description="Quizzes interactivos con preguntas de selección múltiple e interpretación de secuencias.",
+            badge="8 evaluaciones",
+            bg_color="#FAF5FF",
+            border_color="#F3E8FF",
             target_page="quiz",
             button_text="Iniciar quiz",
             progress_value=15
         )
 
-    with col_r3:
+    with col_m3:
+        play_svg = """<div style="background: #DCFCE7; color: #16A34A; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        </div>"""
         module_card(
-            icon="TUT",
-            title="Guías y Tutoriales",
-            description="Ruta de aprendizaje con conceptos de biología molecular, NCBI y formato FASTA.",
-            badge="8 Guías",
-            bg_color="#EFF6FF",
-            border_color="#DBEAFE",
+            icon_html=play_svg,
+            title="Tutoriales",
+            description="Guías paso a paso de transcripción, traducción y detección de mutaciones.",
+            badge="5 tutoriales",
+            bg_color="#F0FDF4",
+            border_color="#DCFCE7",
             target_page="tutorials",
             button_text="Ver tutoriales",
             progress_value=10
