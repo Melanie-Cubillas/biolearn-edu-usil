@@ -141,18 +141,19 @@ def render_page_styles():
 
     .info-icon {
         width: 58px;
-        height: 58px;
-        border-radius: 999px;
+        height: 32px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 27px;
+        font-size: 13px;
+        font-weight: 800;
         margin-bottom: .5rem;
     }
 
-    .icon-purple { background:#EDE9FE; }
-    .icon-blue { background:#E0F2FE; }
-    .icon-green { background:#DCFCE7; }
+    .icon-purple { background:#EDE9FE; color:#7C5CFC !important; }
+    .icon-blue { background:#E0F2FE; color:#2563EB !important; }
+    .icon-green { background:#DCFCE7; color:#16A34A !important; }
 
     .info-card-title {
         color: #0F172A;
@@ -349,12 +350,12 @@ def render_sequence(sequence, label, mutation_pattern=None):
         <div class="dna-wrap">
             {bases_html}
         </div>
-        <div class="legend">
-            <span>🟩 A = Adenina</span>
-            <span>🟥 T = Timina</span>
-            <span>🟦 C = Citosina</span>
-            <span>🟧 G = Guanina</span>
-            <span>🟪 Región clave/mutación</span>
+        <div class="legend" style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem; flex-wrap: wrap;">
+            <span style="display: flex; align-items: center;"><span style="display:inline-block; width:12px; height:12px; background:#DCFCE7; border: 1px solid #16A34A; border-radius:3px; margin-right:4px;"></span>A = Adenina</span>
+            <span style="display: flex; align-items: center;"><span style="display:inline-block; width:12px; height:12px; background:#FEE2E2; border: 1px solid #DC2626; border-radius:3px; margin-right:4px;"></span>T = Timina</span>
+            <span style="display: flex; align-items: center;"><span style="display:inline-block; width:12px; height:12px; background:#DBEAFE; border: 1px solid #2563EB; border-radius:3px; margin-right:4px;"></span>C = Citosina</span>
+            <span style="display: flex; align-items: center;"><span style="display:inline-block; width:12px; height:12px; background:#FED7AA; border: 1px solid #EA580C; border-radius:3px; margin-right:4px;"></span>G = Guanina</span>
+            <span style="display: flex; align-items: center;"><span style="display:inline-block; width:12px; height:12px; background:linear-gradient(135deg, #8B5CF6, #A78BFA); border:1px solid #7C3AED; border-radius:3px; margin-right:4px;"></span>Región clave/mutación</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -383,13 +384,13 @@ def disease_detail_page():
     col1, col2, col3 = st.columns(3, gap="large")
 
     with col1:
-        render_info_card("🧠", "icon-purple", "Concepto médico y genético", disease["concept"])
+        render_info_card("CON", "icon-purple", "Concepto médico y genético", disease["concept"])
 
     with col2:
-        render_info_card("🩺", "icon-blue", "Síntomas", disease["symptoms"])
+        render_info_card("SIN", "icon-blue", "Síntomas", disease["symptoms"])
 
     with col3:
-        render_info_card("❕", "icon-green", "Causas", disease["causes"])
+        render_info_card("CAU", "icon-green", "Causas", disease["causes"])
 
     st.markdown('<div class="section-kicker">Secuencias</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Comparación de ADN</div>', unsafe_allow_html=True)
@@ -428,6 +429,6 @@ def disease_detail_page():
 
     st.divider()
 
-    if st.button("Volver a enfermedades"):
+    if st.button("Volver a enfermedades", type="secondary", use_container_width=True):
         st.session_state.page = "diseases"
         st.rerun()

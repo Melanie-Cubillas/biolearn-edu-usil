@@ -65,10 +65,17 @@ def quiz_page():
                 for option in options
             }
 
+            saved_val = st.session_state.get(f"question_{question['id']}")
+            try:
+                saved_idx = list(option_map.keys()).index(saved_val) if saved_val is not None else None
+            except ValueError:
+                saved_idx = None
+
             selected_label = st.radio(
                 "Selecciona una respuesta",
                 list(option_map.keys()),
-                index=None,
+                index=saved_idx,
+                disabled=st.session_state.quiz_submitted,
                 key=f"question_{question['id']}"
             )
 
@@ -77,41 +84,79 @@ def quiz_page():
             else:
                 selected_answers[question["id"]] = option_map[selected_label]
 
+            if st.session_state.quiz_submitted:
+                user_opt = option_map.get(selected_label)
+                if user_opt:
+                    if user_opt["is_correct"]:
+                        st.success("Respuesta correcta")
+                    else:
+                        st.error("Respuesta incorrecta")
+                        correct_opt = next((o for o in options if o["is_correct"]), None)
+                        if correct_opt:
+                            st.info(f"Respuesta correcta: {correct_opt['option_text']}")
+                else:
+                    st.warning("No respondiste esta pregunta.")
+
+                st.markdown(f"**Explicación:** {question.get('explanation', 'Sin explicación disponible.')}")
+                st.divider()
+
         col1, col2 = st.columns(2)
 
         with col1:
-            if st.button("Enviar respuestas", use_container_width=True):
-                if unanswered_questions:
-                    st.warning(
-                        "Debes responder todas las preguntas antes de enviar. "
-                        f"Faltan: {', '.join(map(str, unanswered_questions))}."
+            if not st.session_state.quiz_submitted:
+                if st.button("Enviar respuestas", type="primary", use_container_width=True):
+                    if unanswered_questions:
+                        st.warning(
+                            "Debes responder todas las preguntas antes de enviar. "
+                            f"Faltan: {', '.join(map(str, unanswered_questions))}."
+                        )
+                        return
+
+                    score = 0
+
+                    for selected_option in selected_answers.values():
+                        if selected_option["is_correct"]:
+                            score += 1
+
+                    total = len(questions)
+
+                    save_quiz_result(
+                        user_id=user["id"],
+                        score=score,
+                        total_questions=total,
+                        access_token=user["access_token"],
+                        refresh_token=user["refresh_token"]
                     )
-                    return
 
-                score = 0
+                    st.session_state.quiz_score = score
+                    st.session_state.quiz_total = total
+                    st.session_state.quiz_submitted = True
 
-                for selected_option in selected_answers.values():
-                    if selected_option["is_correct"]:
-                        score += 1
+                    # Actualizar progreso e insignias
+                    new_progress = max(st.session_state.get("progress", 0), 80)
+                    st.session_state.progress = new_progress
 
-                total = len(questions)
+                    new_badges = st.session_state.get("badges", 0)
+                    if score == total:
+                        new_badges = max(new_badges, 1)
+                        st.session_state.badges = new_badges
 
-                save_quiz_result(
-                    user_id=user["id"],
-                    score=score,
-                    total_questions=total,
-                    access_token=user["access_token"],
-                    refresh_token=user["refresh_token"]
-                )
+                    user = st.session_state.get("user", {})
+                    if isinstance(user, dict) and "email" in user:
+                        from services.progress_service import save_user_progress
+                        save_user_progress(
+                            user["email"],
+                            new_progress,
+                            st.session_state.get("streak", 1),
+                            new_badges
+                        )
 
-                st.session_state.quiz_score = score
-                st.session_state.quiz_total = total
-                st.session_state.quiz_submitted = True
-
-                st.rerun()
+                    st.rerun()
+            else:
+                st.info(f"Puntaje obtenido: {st.session_state.quiz_score}/{st.session_state.quiz_total}")
 
         with col2:
-            if st.button("Generar nuevas preguntas", use_container_width=True):
+            if st.button("Generar nuevas preguntas", type="secondary", use_container_width=True):
                 st.session_state.pop("quiz_questions", None)
                 st.session_state.pop("quiz_score", None)
                 st.session_state.pop("quiz_total", None)
@@ -122,22 +167,18 @@ def quiz_page():
             score = st.session_state.quiz_score
             total = st.session_state.quiz_total
 
-            st.success(f"Tu puntaje fue {score}/{total}")
-            st.info("Tu resultado fue guardado correctamente.")
-
             if score == total:
-                st.balloons()
-                st.write("Excelente. Dominas los conceptos básicos de bioinformática.")
+                st.success("Excelente. Dominas los conceptos evaluados de bioinformática.")
             elif score >= total / 2:
-                st.write("Buen avance. Revisa los temas donde tuviste dudas.")
+                st.info("Buen avance. Revisa los temas donde tuviste dudas.")
             else:
-                st.write("Te recomendamos revisar los tutoriales antes de volver a intentarlo.")
+                st.warning("Te recomendamos revisar los tutoriales antes de volver a intentarlo.")
 
     except Exception as error:
         st.error("Ocurrió un error al cargar o guardar el quiz.")
         st.code(str(error))
 
-    if st.button("Volver al inicio"):
+    if st.button("Volver al inicio", type="secondary", use_container_width=True):
         st.session_state.pop("quiz_questions", None)
         st.session_state.page = "dashboard"
         st.rerun()

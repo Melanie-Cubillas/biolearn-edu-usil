@@ -13,33 +13,27 @@ def transcription_page():
     disease_key = st.session_state.get("selected_disease", "huntington")
     disease = DISEASE_DATA[disease_key]
 
-    st.title("Transcripción")
+    st.title("Transcripción de ADN")
     st.subheader(disease["title"])
 
-    source = st.radio(
-        "Fuente de la secuencia",
-        ["Secuencia del ejemplo", "Buscar en NCBI"],
-        horizontal=True
-    )
+    # Selector de fuente visual e inhabilitado para NCBI
+    st.markdown("<p style='font-size: 14.5px; font-weight: 600; color: #475569; margin-bottom: 8px;'>Fuente de la secuencia</p>", unsafe_allow_html=True)
+    st.markdown("""
+    <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1.5rem;">
+        <div style="padding: 0.5rem 1rem; background: #3B82F6; color: white; border-radius: 8px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 10px rgba(59,130,246,0.2);">Secuencia del ejemplo</div>
+        <div style="padding: 0.5rem 1rem; background: #F1F5F9; color: #94A3B8; border-radius: 8px; border: 1px dashed #CBD5E1; font-size: 14px; cursor: not-allowed;">Buscar en NCBI (Disponible próximamente)</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     dna = disease["reference_sequence"].replace(" ", "")
     ncbi_data = None
-
-    if source == "Buscar en NCBI":
-        accession_id = st.text_input("Accession ID", value="NM_002111")
-
-        if st.button("Obtener secuencia desde NCBI"):
-            ncbi_data = get_sequence(accession_id)
-            dna = ncbi_data["sequence"]
-            st.session_state["transcription_dna"] = dna
-            st.session_state["transcription_ncbi"] = ncbi_data
 
     dna = st.session_state.get("transcription_dna", dna)
     ncbi_data = st.session_state.get("transcription_ncbi", ncbi_data)
 
     dna = st.text_area("Secuencia de ADN", value=dna, height=120)
 
-    if st.button("Transcribir ADN a ARN"):
+    if st.button("Transcribir ADN a ARN", type="primary"):
         result = transcribe_dna_to_rna(dna)
         stop_codons = find_stop_codons(result["rna"])
 
@@ -51,7 +45,7 @@ def transcription_page():
         st.write("ARN mensajero:")
         st.code(result["rna"])
 
-        st.subheader("¿Cómo se solucionó?")
+        st.subheader("Resolución paso a paso")
         for step in result["steps"]:
             st.write(step)
 
@@ -63,15 +57,12 @@ def transcription_page():
 
         if ncbi_data:
             st.subheader("Información NCBI / FASTA")
-            st.write(f"ID: {ncbi_data['id']}")
+            st.write(f"ID de acceso: {ncbi_data['id']}")
             st.write(f"Descripción: {ncbi_data['description']}")
-            st.write(f"Fuente: {ncbi_data['source']}")
-            st.write(f"Archivo local: {ncbi_data['file_path']}")
+            st.write(f"Fuente de datos: {ncbi_data['source']}")
+            if "length" in ncbi_data:
+                st.write(f"Longitud de la secuencia: {ncbi_data['length']} pb")
 
-            st.subheader("Pasos de lectura/escritura FASTA")
-            for step in ncbi_data["steps"]:
-                st.write(step)
-
-    if st.button("Volver"):
+    if st.button("Volver", type="secondary", use_container_width=True):
         st.session_state.page = "disease_detail"
         st.rerun()
