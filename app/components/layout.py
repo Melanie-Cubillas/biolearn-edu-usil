@@ -217,17 +217,17 @@ def load_styles():
     }
 
     /* Inputs */
-    .stTextInput > div > div > input {
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea {
         border-radius: 10px !important;
-        border: 1px solid #E2E8F0 !important;
+        border: 1px solid #CBD5E1 !important;
         background: #FFFFFF !important;
-        height: 40px !important;
         color: #0F172A !important;
         font-size: 14.5px !important;
-        padding: 0 1rem !important;
         transition: all 0.2s ease-in-out !important;
     }
-    .stTextInput > div > div > input:focus {
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
         border-color: #4F46E5 !important;
         box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
     }
@@ -403,16 +403,18 @@ def load_styles():
     /* Botón Secundario */
     .stButton > button[kind="secondary"],
     .stButton > button.stBaseButton-secondary {
-        border: 1px solid #D8E2EF !important;
+        border: 1px solid #CBD5E1 !important;
         background: #FFFFFF !important;
         color: #4F46E5 !important;
         font-weight: 600 !important;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06) !important;
     }
     .stButton > button[kind="secondary"]:hover,
     .stButton > button.stBaseButton-secondary:hover {
         border-color: #4F46E5 !important;
-        background: rgba(99, 102, 241, 0.04) !important;
+        background: rgba(99, 102, 241, 0.05) !important;
         color: #4F46E5 !important;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12) !important;
     }
 
     /* Responsividad */
@@ -480,44 +482,41 @@ def top_bar():
     name = user.get("name", "Estudiante") if isinstance(user, dict) else "Estudiante"
     current_page = st.session_state.get("page", "dashboard")
 
+    # Determinar destino de retroceso
+    back_target = None
+    if current_page == "diseases":
+        back_target = "dashboard"
+    elif current_page == "disease_detail":
+        back_target = "diseases"
+    elif current_page in ["transcription", "translation", "mutation_recognition"]:
+        back_target = "disease_detail"
+    elif current_page in ["quiz", "tutorials"]:
+        back_target = "dashboard"
+
     st.markdown("""
     <style>
-    div[data-testid="stVerticalBlock"]:has(> div .biolearn-topbar-anchor) {
-        position: sticky;
-        top: 0;
-        z-index: 999;
-        background: linear-gradient(135deg, #061A3A 0%, #0B2454 58%, #312E81 100%);
-        border: 1px solid rgba(96, 165, 250, 0.24);
-        border-radius: 0 0 18px 18px;
-        padding: 0.75rem 1rem 0.9rem;
-        margin: -0.15rem 0 1.5rem;
-        box-shadow: 0 18px 38px rgba(6, 26, 58, 0.22);
+    /* Estilos del Header Premium */
+    div[data-testid="stVerticalBlock"]:has(.custom-nav-trigger) {
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(226, 232, 240, 0.9) !important;
+        border-radius: 20px !important;
+        padding: 0.8rem 1.6rem !important;
+        margin-bottom: 2rem !important;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04) !important;
     }
-
-    .biolearn-topbar-anchor {
-        height: 0;
-        margin: 0;
-        padding: 0;
-    }
-
-    .nav-brand {
+    .nav-logo-text {
+        font-size: 24px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #1E3A8A 0%, #4F46E5 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        min-height: 42px;
-    }
-
-    .nav-brand-copy {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        line-height: 1.1;
-    }
-
-    .nav-brand-title {
-        color: #FFFFFF !important;
-        font-size: 17px;
-        font-weight: 900;
+        height: 40px;
+        line-height: 40px;
+        letter-spacing: -0.02em;
     }
 
     .nav-brand-subtitle {
@@ -529,10 +528,9 @@ def top_bar():
     }
 
     .nav-user-text {
-        color: #DBEAFE !important;
-        font-size: 13px;
+        font-size: 14.5px;
         font-weight: 700;
-        height: 40px;
+        color: #475569 !important;
         display: flex;
         align-items: center;
         justify-content: flex-end;
@@ -540,127 +538,47 @@ def top_bar():
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-
-    div.st-key-global_nav_search input {
-        height: 40px !important;
-        border-radius: 12px !important;
-        background: rgba(255, 255, 255, 0.98) !important;
-        border: 1px solid rgba(96, 165, 250, 0.52) !important;
-        color: #0F172A !important;
-        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.16) !important;
-    }
-
-    div.st-key-global_nav_search label {
-        display: none !important;
-    }
-
-    div.st-key-global_nav_search input::placeholder {
-        color: #64748B !important;
-    }
-
-    div.st-key-global_nav_search input:focus {
-        border-color: #7C3AED !important;
-        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.22) !important;
-    }
-
-    div[class*="st-key-nav_btn_"] button,
-    div[class*="st-key-nav_result_"] button {
-        min-height: 34px !important;
-        height: 34px !important;
-        border-radius: 9px !important;
-        font-size: 12.5px !important;
-        font-weight: 800 !important;
-        padding: 0.2rem 0.55rem !important;
-        white-space: nowrap !important;
-    }
-
-    .nav-search-hint {
-        color: #BFDBFE !important;
-        font-size: 12px;
-        font-weight: 600;
-        margin-top: 0.35rem;
-    }
-
-    @media (max-width: 900px) {
-        div[data-testid="stVerticalBlock"]:has(> div .biolearn-topbar-anchor) {
-            padding: 0.8rem;
-            border-radius: 0 0 14px 14px;
-        }
-
-        .nav-brand-copy,
-        .nav-user-text {
-            display: none;
-        }
-
-        div[class*="st-key-nav_btn_"] button {
-            font-size: 11.5px !important;
-            padding-left: 0.25rem !important;
-            padding-right: 0.25rem !important;
-        }
-    }
     </style>
     """, unsafe_allow_html=True)
 
     with st.container():
-        st.markdown("<div class='biolearn-topbar-anchor'></div>", unsafe_allow_html=True)
+        st.markdown('<div class="custom-nav-trigger"></div>', unsafe_allow_html=True)
+        col_back, col_logo, col_nav_home, col_nav_learn, col_nav_quiz, col_nav_tut, col_user = st.columns([1, 1.8, 1, 2.2, 1, 1.1, 1.8])
 
-        col_logo, col_search, col_user = st.columns([1.55, 3.2, 1.25], gap="medium")
+        with col_back:
+            if back_target:
+                if st.button("← Atrás", key="nav_btn_back", use_container_width=True, type="secondary"):
+                    st.session_state.page = back_target
+                    st.rerun()
+            else:
+                st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
 
         with col_logo:
-            logo_col, text_col = st.columns([0.6, 1.4], gap="small")
-            with logo_col:
-                st.image(str(LOGO_PATH), width=46)
-            with text_col:
-                st.markdown(
-                    """
-                    <div class="nav-brand">
-                        <div class="nav-brand-copy">
-                            <span class="nav-brand-title">BioLearn</span>
-                            <span class="nav-brand-subtitle">USIL</span>
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+            st.markdown("<div class='nav-logo-text'>BioLearn</div>", unsafe_allow_html=True)
 
-        with col_search:
-            st.text_input(
-                "Buscar",
-                key="global_nav_search",
-                placeholder="Buscar herramientas o enfermedades...",
-                label_visibility="collapsed",
-                on_change=_handle_nav_search,
-            )
+        with col_nav_home:
+            is_active = current_page == "dashboard"
+            if st.button("Inicio", key="nav_btn_home", use_container_width=True, type="primary" if is_active else "secondary"):
+                st.session_state.page = "dashboard"
+                st.rerun()
+
+        with col_nav_learn:
+            is_active = current_page in ["diseases", "disease_detail", "translation", "transcription", "mutation_recognition"]
+            if st.button("Aprende Bioinformática", key="nav_btn_learn", use_container_width=True, type="primary" if is_active else "secondary"):
+                st.session_state.page = "diseases"
+                st.rerun()
+
+        with col_nav_quiz:
+            is_active = current_page == "quiz"
+            if st.button("Quiz", key="nav_btn_quiz", use_container_width=True, type="primary" if is_active else "secondary"):
+                st.session_state.page = "quiz"
+                st.rerun()
+
+        with col_nav_tut:
+            is_active = current_page == "tutorials"
+            if st.button("Tutoriales", key="nav_btn_tutorials", use_container_width=True, type="primary" if is_active else "secondary"):
+                st.session_state.page = "tutorials"
+                st.rerun()
 
         with col_user:
             st.markdown(f"<div class='nav-user-text'>{name}</div>", unsafe_allow_html=True)
-
-        nav_cols = st.columns([1, 1.3, 1.35, 1.2, 1.2, 0.85, 1.1], gap="small")
-        for index, item in enumerate(NAV_ITEMS):
-            is_active = current_page == item["page"] or (
-                item["page"] == "diseases" and current_page == "disease_detail"
-            )
-            with nav_cols[index]:
-                if st.button(
-                    item["label"],
-                    key=f"nav_btn_{item['page']}",
-                    use_container_width=True,
-                    type="primary" if is_active else "secondary",
-                ):
-                    _go_to_target(item)
-                    st.rerun()
-
-        matches = _find_search_matches(st.session_state.get("global_nav_search", ""))
-        if matches:
-            st.markdown("<div class='nav-search-hint'>Resultados rápidos</div>", unsafe_allow_html=True)
-            result_cols = st.columns(len(matches), gap="small")
-            for index, match in enumerate(matches):
-                with result_cols[index]:
-                    if st.button(
-                        match["label"],
-                        key=f"nav_result_{index}_{match['page']}",
-                        use_container_width=True,
-                        type="secondary",
-                    ):
-                        _go_to_target(match)
-                        st.rerun()
