@@ -22,17 +22,8 @@ def module_card(icon_html, title, description, badge, bg_color, border_color, ta
     )
 
     if st.button(button_text, use_container_width=True, key=target_page):
-        new_progress = max(st.session_state.get("progress", 0), progress_value)
-        st.session_state.progress = new_progress
-        user = st.session_state.get("user", {})
-        if isinstance(user, dict) and "email" in user:
-            from services.progress_service import save_user_progress
-            save_user_progress(
-                user["email"],
-                new_progress,
-                st.session_state.get("streak", 1),
-                st.session_state.get("badges", 0)
-            )
+        # Only navigate on module card click. Progress is registered when a user performs
+        # an actual analysis or completes an interactive task (see each module page).
         st.session_state.page = target_page
         st.rerun()
 
@@ -106,36 +97,74 @@ def dashboard_page():
 
     .stats {
         display: grid;
-        grid-template-columns: repeat(3, minmax(100px, 1fr));
+        grid-template-columns: repeat(3, minmax(120px, 1fr));
         gap: 1rem;
+        align-items: stretch;
     }
 
+    /* Modern metric cards using USIL identity */
     .stat-card {
-        background: rgba(255, 255, 255, 0.88);
         border-radius: 16px;
-        padding: 1.2rem;
+        padding: 1rem 1.25rem;
         min-height: 110px;
         display: flex;
-        flex-direction: column;
-        justify-content: center;
+        gap: 1rem;
         align-items: center;
-        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.03);
-        border: 1px solid rgba(226, 232, 240, 0.5);
+        justify-content: flex-start;
+        color: #FFFFFF !important;
+        box-shadow: 0 10px 30px rgba(2,6,23,0.32);
+        position: relative;
+        overflow: hidden;
     }
 
-    .stat-card h2 {
-        margin: 0;
-        color: #0F172A;
-        font-size: 28px;
-        font-weight: 800;
+    .stat-card.progress-card {
+        background: linear-gradient(135deg, #071232 0%, #0B2454 100%);
+    }
+    .stat-card.streak-card {
+        background: linear-gradient(135deg, #0B2454 0%, #3B82F6 100%);
+    }
+    .stat-card.badge-card {
+        background: linear-gradient(135deg, #3B0066 0%, #7C3AED 100%);
     }
 
-    .stat-card span {
-        color: #64748B;
-        font-size: 11px;
+    .stat-card .metric-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.06);
+        flex-shrink: 0;
+    }
+
+    .stat-card .metric-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+    }
+
+    .stat-card .metric-value {
+        font-size: 20px;
+        font-weight: 900;
+        color: #FFFFFF !important;
+    }
+    .stat-card .metric-label {
+        font-size: 12px;
         font-weight: 700;
+        color: rgba(255,255,255,0.85) !important;
         letter-spacing: .08em;
-        margin-top: .4rem;
+    }
+
+    .stat-card .accent-ring {
+        position: absolute;
+        right: -30px;
+        bottom: -30px;
+        width: 140px;
+        height: 140px;
+        border-radius: 999px;
+        opacity: 0.08;
+        background: radial-gradient(circle at 30% 30%, rgba(99,102,241,0.9), transparent 40%);
     }
 
     .section-label {
@@ -293,9 +322,36 @@ def dashboard_page():
                 <p>Selecciona un módulo para profundizar en procesos genéticos moleculares y análisis bioinformáticos prácticos.</p>
             </div>
             <div class="stats">
-                <div class="stat-card"><h2>{progress}%</h2><span>PROGRESO</span></div>
-                <div class="stat-card"><h2>{streak}d</h2><span>RACHA</span></div>
-                <div class="stat-card"><h2>{badges}</h2><span>INSIGNIAS</span></div>
+                <div class="stat-card progress-card">
+                    <div class="metric-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="white" stroke-opacity="0.12" stroke-width="2"/><path d="M12 7v6l4 2" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="metric-body">
+                        <div class="metric-value">{progress}%</div>
+                        <div class="metric-label">PROGRESO</div>
+                    </div>
+                    <div class="accent-ring"></div>
+                </div>
+                <div class="stat-card streak-card">
+                    <div class="metric-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2v6" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 16v6" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="metric-body">
+                        <div class="metric-value">{streak}d</div>
+                        <div class="metric-label">RACHA</div>
+                    </div>
+                    <div class="accent-ring"></div>
+                </div>
+                <div class="stat-card badge-card">
+                    <div class="metric-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l3 6 6 .5-4.5 4 1.5 6-6-3-6 3 1.5-6L3 8.5 9 8 12 2z" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="metric-body">
+                        <div class="metric-value">{badges}</div>
+                        <div class="metric-label">INSIGNIAS</div>
+                    </div>
+                    <div class="accent-ring"></div>
+                </div>
             </div>
         </div>
         """,
