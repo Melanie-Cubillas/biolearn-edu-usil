@@ -11,7 +11,6 @@ from services.bioinformatics_service import translate_dna_to_protein
 
 
 def validate_dna_sequence(sequence: str) -> tuple[bool, str]:
-    """Validate DNA sequence (ATCG only)."""
     seq_clean = sequence.strip().upper().replace(" ", "").replace("\n", "")
     if not seq_clean:
         return False, "Por favor, ingresa una secuencia de ADN para traducir."
@@ -19,25 +18,19 @@ def validate_dna_sequence(sequence: str) -> tuple[bool, str]:
         invalid_chars = set(seq_clean) - set("ATCG")
         return False, f"Caracteres inválidos: {', '.join(sorted(invalid_chars))}. Solo permite A, T, C, G."
     if len(seq_clean) < 3:
-        return False, "La secuencia debe tener al menos 3 bases (1 codón)."
+        return False, "La secuencia debe tener al menos 3 bases."
     return True, seq_clean
 
 
 def render_validation_error(message: str):
-    """Render custom validation error card."""
-    st.markdown(f"""
-    <div style='border: 1px solid #FECACA; background: #FEF2F2; border-radius: 14px; padding: 1rem; margin: 1rem 0;'>
-        <div style='color: #991B1B; font-weight: 700; margin-bottom: 0.5rem;'>Validación requerida</div>
-        <div style='color: #7F1D1D; font-size: 0.95rem;'>{message}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.error(message)
 
 
 def _sequence_tokens(sequence, token_size=1, limit=180):
     sequence = (sequence or "")[:limit]
     return "".join(
-        f"<span class='bio-token'>{html.escape(sequence[index:index + token_size])}</span>"
-        for index in range(0, len(sequence), token_size)
+        f"<span class='bio-token'>{html.escape(sequence[i:i + token_size])}</span>"
+        for i in range(0, len(sequence), token_size)
     )
 
 
@@ -78,15 +71,14 @@ def _codon_cards(codon_table):
 def _stop_codon_cards(stop_codons):
     if not stop_codons:
         return """
-        <div style='display:inline-block; min-width:320px; background: linear-gradient(90deg, rgba(59,130,246,0.06), rgba(99,102,241,0.04)); border: 1px solid rgba(59,130,246,0.12); padding: 0.85rem 1rem; border-radius: 12px; color: #0F172A; font-weight:700;'>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" style="vertical-align:middle; margin-right:.5rem;"><path d="M11 7h2v6h-2V7zm0 8h2v2h-2v-2z" stroke="#2563EB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="#93C5FD" stroke-width="1.2"/></svg>
+        <div class="bio-empty-state">
             No se encontró codón de parada en el fragmento analizado.
         </div>
         """
 
     return "".join(
         f"""
-        <div class="stop-card" style="display:inline-block; white-space:normal; margin-right:.5rem;">
+        <div class="stop-card">
             <div class="stop-codon">{html.escape(item["codon"])}</div>
             <div>Codón #{item["codon_position"]}</div>
             <small>Base inicial: {item["base_position"]}</small>
@@ -96,299 +88,299 @@ def _stop_codon_cards(stop_codons):
     )
 
 
+def render_translation_styles():
+    st.html("""
+    <style>
+    .bio-flow-panel {
+        background: #FFFFFF;
+        border: 1px solid #D8E2EF;
+        border-radius: 18px;
+        padding: 1.4rem;
+        margin: 1.25rem 0;
+        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.07);
+    }
+
+    .bio-flow-title {
+        color: #061A3A;
+        font-size: 22px;
+        font-weight: 900;
+        margin-bottom: 1rem;
+    }
+
+    .bio-flow {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr) 56px minmax(0, 1fr);
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .bio-node {
+        min-height: 180px;
+        border-radius: 16px;
+        border: 1px solid #BFDBFE;
+        background: linear-gradient(180deg, #F8FAFC 0%, #EFF6FF 100%);
+        padding: 1rem;
+        overflow: hidden;
+    }
+
+    .bio-node-rna {
+        border-color: #C4B5FD;
+        background: linear-gradient(180deg, #F8FAFC 0%, #F5F3FF 100%);
+    }
+
+    .bio-node-protein {
+        border-color: #93C5FD;
+        background: linear-gradient(180deg, #F8FAFC 0%, #EEF2FF 100%);
+    }
+
+    .bio-node-label {
+        color: #2563EB;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        margin-bottom: .7rem;
+    }
+
+    .bio-token-wrap, .protein-token-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .4rem;
+        max-height: 118px;
+        overflow: auto;
+        padding-right: .2rem;
+    }
+
+    .bio-token {
+       
+        min-width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #DBEAFE !important;
+        color: #1D4ED8 !important;
+        font-weight: 900 !important;
+        font-size: 16px !important;
+        border: 1px solid #93C5FD;
+
+    }
+
+    .protein-token {
+        min-width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #EDE9FE !important;
+        color: #6D28D9 !important;
+        font-weight: 900 !important;
+        font-size: 16px !important;
+        border: 1px solid #C4B5FD;
+    }
+
+    .bio-arrow {
+        height: 4px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #2563EB, #7C3AED);
+        position: relative;
+    }
+
+    .bio-arrow::after {
+        content: "";
+        position: absolute;
+        right: -1px;
+        top: -6px;
+        border-left: 12px solid #7C3AED;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+    }
+
+    .bio-process-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: .75rem;
+        margin-top: 1rem;
+    }
+
+    .bio-step {
+        display: flex;
+        gap: .65rem;
+        align-items: center;
+        background: #F8FAFC;
+        border: 1px solid #D8E2EF;
+        border-radius: 14px;
+        padding: .85rem;
+        color: #334155 !important;
+        font-size: 15px;
+        line-height: 1.35;
+    }
+
+    .bio-step-index {
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #0B2454;
+        color: #FFFFFF !important;
+        font-size: 13px;
+        font-weight: 900;
+        flex: 0 0 auto;
+    }
+
+    .codon-grid {
+        display: flex;
+        gap: .75rem;
+        overflow-x: auto;
+        padding-bottom: .5rem;
+    }
+
+    .codon-card {
+        min-width: 140px;
+        background: #F8FAFC;
+        border: 1px solid #CBD5E1;
+        border-radius: 14px;
+        padding: .85rem;
+        color: #334155;
+    }
+
+    .codon-rna {
+        color: #0B2454;
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: .08em;
+    }
+
+    .codon-link {
+        height: 3px;
+        width: 44px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #2563EB, #7C3AED);
+        margin: .5rem 0;
+    }
+
+    .aminoacid-chip {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #312E81;
+        color: #FFFFFF !important;
+        font-weight: 900;
+    }
+
+    .codon-card small {
+        display: block;
+        color: #64748B;
+        font-weight: 700;
+        margin-top: .45rem;
+    }
+
+    .stop-grid {
+        display: flex;
+        gap: .75rem;
+        overflow-x: auto;
+        padding-bottom: .5rem;
+    }
+
+    .stop-card, .bio-empty-state {
+        background: #F8FAFC;
+        border: 1px solid #CBD5E1;
+        border-radius: 14px;
+        padding: .9rem;
+        color: #334155;
+        font-weight: 700;
+    }
+
+    .stop-codon {
+        color: #7C3AED;
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: .08em;
+    }
+
+    .stop-card small {
+        color: #64748B;
+        display: block;
+        margin-top: .25rem;
+    }
+
+    @media (max-width: 900px) {
+        .bio-flow {
+            grid-template-columns: 1fr;
+        }
+
+        .bio-arrow {
+            transform: rotate(90deg);
+            width: 56px;
+            justify-self: center;
+        }
+    }
+    </style>
+    """)
+
+
 def render_translation_result(result, df):
-    st.markdown(
-        f"""
-        <style>
-        .bio-flow-panel {{
-            background: #FFFFFF;
-            border: 1px solid #D8E2EF;
-            border-radius: 16px;
-            padding: 1.35rem;
-            margin: 1.25rem 0;
-            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.07);
-        }}
+    render_translation_styles()
 
-        .bio-flow-title {{
-            color: #061A3A;
-            font-size: 20px;
-            font-weight: 900;
-            margin-bottom: 1rem;
-        }}
-
-        .bio-flow {{
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr) 56px minmax(0, 1fr);
-            gap: 1rem;
-            align-items: center;
-        }}
-
-        .bio-node {{
-            min-height: 180px;
-            border-radius: 14px;
-            border: 1px solid #BFDBFE;
-            background: linear-gradient(180deg, #F8FAFC 0%, #EFF6FF 100%);
-            padding: 1rem;
-            overflow: hidden;
-        }}
-
-        .bio-node-rna {{
-            border-color: #C4B5FD;
-            background: linear-gradient(180deg, #F8FAFC 0%, #F5F3FF 100%);
-        }}
-
-        .bio-node-protein {{
-            border-color: #93C5FD;
-            background: linear-gradient(180deg, #F8FAFC 0%, #EEF2FF 100%);
-        }}
-
-        .bio-node-label {{
-            color: #2563EB;
-            font-size: 12px;
-            font-weight: 900;
-            letter-spacing: .1em;
-            text-transform: uppercase;
-            margin-bottom: .7rem;
-        }}
-
-        .bio-token-wrap, .protein-token-wrap {{
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.35rem;
-            max-height: 118px;
-            overflow: auto;
-            padding-right: 0.2rem;
-        }}
-
-        .bio-token, .protein-token {{
-            min-width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: #0B2454;
-            color: #FFFFFF !important;
-            font-weight: 900 !important;
-            font-size: 12px;
-            box-shadow: inset 0 -2px 0 rgba(255, 255, 255, .12);
-        }}
-        /* Force high-contrast inside genomic sequence containers */
-        .bio-node .bio-token, .bio-node-rna .bio-token, .bio-node-protein .protein-token, .bio-process-grid .bio-step {{
-            color: #FFFFFF !important;
-            font-weight: 700 !important;
-        }}
-
-        .protein-token {{
-            background: linear-gradient(135deg, #2563EB, #7C3AED);
-            min-width: 32px;
-        }}
-
-        .bio-arrow {{
-            height: 4px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, #2563EB, #7C3AED);
-            position: relative;
-            overflow: hidden;
-        }}
-
-        .bio-arrow::before {{
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,.85), transparent);
-            animation: bioPulse 1.4s linear infinite;
-        }}
-
-        .bio-arrow::after {{
-            content: "";
-            position: absolute;
-            right: -1px;
-            top: -6px;
-            border-left: 12px solid #7C3AED;
-            border-top: 8px solid transparent;
-            border-bottom: 8px solid transparent;
-        }}
-
-        .bio-process-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: .75rem;
-            margin-top: 1rem;
-        }}
-
-        .bio-step {{
-            display: inline-flex;
-            gap: .65rem;
-            align-items: center;
-            color: #FFFFFF !important;
-            background: linear-gradient(90deg, #0B2454 0%, #071233 100%);
-            border: 1px solid rgba(11,36,84,0.6);
-            border-radius: 12px;
-            padding: .8rem;
-            font-size: 13.5px;
-            line-height: 1.35;
-            white-space: normal;
-        }}
-
-        .bio-step-index {{
-            width: 24px;
-            height: 24px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #3B82F6, #8B5CF6);
-            color: #FFFFFF !important;
-            font-size: 12px;
-            font-weight: 900;
-            flex: 0 0 auto;
-            box-shadow: 0 6px 14px rgba(59,130,246,0.12);
-        }}
-
-        .codon-grid {{
-            display: inline-flex;
-            gap: .75rem;
-            align-items: flex-start;
-            margin-top: 0.5rem;
-            overflow-x: auto;
-            white-space: nowrap;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: 0.5rem;
-        }}
-        .codon-card {{
-            display: inline-block;
-            vertical-align: top;
-            min-width: 140px;
-        }}
-
-        .codon-card {{
-            background: #F8FAFC;
-            border: 1px solid #CBD5E1;
-            border-radius: 12px;
-            padding: .85rem;
-            color: #334155;
-        }}
-
-        .codon-rna {{
-            color: #0B2454;
-            font-size: 18px;
-            font-weight: 900;
-            letter-spacing: .08em;
-        }}
-
-        .codon-link {{
-            height: 3px;
-            width: 44px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, #2563EB, #7C3AED);
-            margin: .5rem 0;
-        }}
-
-        .aminoacid-chip {{
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #312E81;
-            color: #FFFFFF !important;
-            font-weight: 900;
-        }}
-
-        .codon-card small {{
-            display: block;
-            color: #64748B;
-            font-weight: 700;
-            margin-top: .45rem;
-        }}
-
-        .stop-grid {{
-            display: flex;
-            gap: .75rem;
-            margin-top: 1rem;
-            overflow-x: auto;
-            white-space: nowrap;
-            padding-bottom: 0.5rem;
-            -webkit-overflow-scrolling: touch;
-        }}
-
-        .stop-card, .bio-empty-state {{
-            background: #F8FAFC;
-            border: 1px solid #CBD5E1;
-            border-radius: 12px;
-            padding: .9rem;
-            color: #334155;
-            font-weight: 700;
-        }}
-
-        .stop-codon {{
-            color: #7C3AED;
-            font-size: 24px;
-            font-weight: 900;
-            letter-spacing: .08em;
-        }}
-
-        .stop-card small {{
-            color: #64748B;
-            display: block;
-            margin-top: .25rem;
-        }}
-
-        @keyframes bioPulse {{
-            from {{ transform: translateX(-100%); }}
-            to {{ transform: translateX(100%); }}
-        }}
-
-        @media (max-width: 900px) {{
-            .bio-flow {{
-                grid-template-columns: 1fr;
-            }}
-            .bio-arrow {{
-                transform: rotate(90deg);
-                width: 56px;
-                justify-self: center;
-            }}
-        }}
-        </style>
-
-        <div class="bio-flow-panel">
-            <div class="bio-flow-title">Flujo de traducción</div>
-            <div class="bio-flow">
-                <div class="bio-node">
-                    <div class="bio-node-label">ADN</div>
-                    <div class="bio-token-wrap">{_sequence_tokens(result["dna"])}</div>
-                </div>
-                <div class="bio-arrow"></div>
-                <div class="bio-node bio-node-rna">
-                    <div class="bio-node-label">ARNm generado</div>
-                    <div class="bio-token-wrap">{_sequence_tokens(result["rna"])}</div>
-                </div>
-                <div class="bio-arrow"></div>
-                <div class="bio-node bio-node-protein">
-                    <div class="bio-node-label">Proteína</div>
-                    <div class="protein-token-wrap">{_protein_tokens(result["protein"])}</div>
-                </div>
+    st.html(f"""
+    <div class="bio-flow-panel">
+        <div class="bio-flow-title">Flujo de traducción</div>
+        <div class="bio-flow">
+            <div class="bio-node">
+                <div class="bio-node-label">ADN</div>
+                <div class="bio-token-wrap">{_sequence_tokens(result["dna"])}</div>
             </div>
 
-            <div class="bio-process-grid">
-                {_step_cards(result["steps"])}
+            <div class="bio-arrow"></div>
+
+            <div class="bio-node bio-node-rna">
+                <div class="bio-node-label">ARNm generado</div>
+                <div class="bio-token-wrap">{_sequence_tokens(result["rna"])}</div>
             </div>
 
-            <div class="bio-flow-title" style="margin-top:1.2rem;">Conversión codón a aminoácido</div>
-            <div class="codon-grid">
-                {_codon_cards(df.to_dict("records"))}
-            </div>
+            <div class="bio-arrow"></div>
 
-            <div class="bio-flow-title" style="margin-top:1.2rem;">Codones de parada</div>
-            <div class="stop-grid">
-                {_stop_codon_cards(result["stop_codons"])}
+            <div class="bio-node bio-node-protein">
+                <div class="bio-node-label">Proteína</div>
+                <div class="protein-token-wrap">{_protein_tokens(result["protein"])}</div>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    </div>
+    """)
+
+    st.html(f"""
+    <div class="bio-flow-panel">
+        <div class="bio-flow-title">Pasos del proceso</div>
+        <div class="bio-process-grid">
+            {_step_cards(result["steps"])}
+        </div>
+    </div>
+    """)
+
+    st.html(f"""
+    <div class="bio-flow-panel">
+        <div class="bio-flow-title">Conversión codón a aminoácido</div>
+        <div class="codon-grid">
+            {_codon_cards(df.to_dict("records"))}
+        </div>
+    </div>
+    """)
+
+    st.html(f"""
+    <div class="bio-flow-panel">
+        <div class="bio-flow-title">Codones de parada</div>
+        <div class="stop-grid">
+            {_stop_codon_cards(result["stop_codons"])}
+        </div>
+    </div>
+    """)
 
 
 def translation_page():
@@ -401,9 +393,11 @@ def translation_page():
     st.title("Traducción de Proteínas")
     st.subheader(disease["title"])
 
-    # Selector de fuente interactivo
-    st.markdown("<p style='font-size: 14.5px; font-weight: 600; color: #475569; margin-bottom: 8px;'>Fuente de la secuencia</p>", unsafe_allow_html=True)
-    
+    st.markdown(
+        "<p style='font-size: 14.5px; font-weight: 600; color: #475569; margin-bottom: 8px;'>Fuente de la secuencia</p>",
+        unsafe_allow_html=True
+    )
+
     if "translation_source" not in st.session_state:
         st.session_state["translation_source"] = "Secuencia del ejemplo"
 
@@ -415,16 +409,19 @@ def translation_page():
         label_visibility="collapsed"
     )
 
-    # Manejar cambio de fuente
     if fuente_seq != st.session_state["translation_source"]:
         st.session_state["translation_source"] = fuente_seq
+
         if fuente_seq == "Secuencia del ejemplo":
-            if "translation_ncbi" in st.session_state:
-                del st.session_state["translation_ncbi"]
-            st.session_state["translation_dna"] = disease["mutated_sequence"].replace(" ", "")
+            st.session_state.pop("translation_ncbi", None)
+            st.session_state["translation_dna"] = disease.get(
+                "mutated_sequence",
+                disease["reference_sequence"]
+            ).replace(" ", "")
+
         st.rerun()
 
-    dna = disease["mutated_sequence"].replace(" ", "")
+    dna = disease.get("mutated_sequence", disease["reference_sequence"]).replace(" ", "")
     ncbi_data = None
 
     dna = st.session_state.get("translation_dna", dna)
@@ -432,6 +429,7 @@ def translation_page():
 
     if fuente_seq == "Buscar en NCBI (Exploratorio)":
         col_input, col_btn = st.columns([3, 1])
+
         with col_input:
             acc_id = st.text_input(
                 "Accession ID de NCBI",
@@ -439,10 +437,11 @@ def translation_page():
                 key="translation_acc_id_input",
                 placeholder="Ej. NM_002111"
             )
+
         with col_btn:
             st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
             buscar_clicked = st.button("Buscar en NCBI", type="secondary", use_container_width=True)
-            
+
         if buscar_clicked:
             if acc_id:
                 with st.spinner("Buscando secuencia en NCBI..."):
@@ -455,26 +454,28 @@ def translation_page():
                     except Exception as e:
                         st.error(f"Error al conectar con NCBI: {str(e)}")
             else:
-                st.warning("Por favor, ingrese un Accession ID.")
+                st.warning("Por favor, ingresa un Accession ID.")
 
     dna = st.text_area("Secuencia de ADN", value=dna, height=120)
     st.session_state["translation_dna"] = dna
 
     if st.button("Traducir ADN a proteína", type="primary"):
         is_valid, dna_clean = validate_dna_sequence(dna)
+
         if not is_valid:
             render_validation_error(dna_clean)
             st.stop()
 
         result = translate_dna_to_protein(dna_clean)
         df = pd.DataFrame(result["codon_table"])
+
         render_translation_result(result, df)
 
-        # Register progress only when a translation analysis was executed
         if not st.session_state.get("completed_translation", False):
             increment = 15
             st.session_state.progress = min(100, st.session_state.get("progress", 0) + increment)
             st.session_state.completed_translation = True
+
             user = st.session_state.get("user", {})
             if isinstance(user, dict) and "email" in user:
                 from services.progress_service import save_user_progress
