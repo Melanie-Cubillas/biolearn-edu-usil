@@ -1,4 +1,41 @@
+from pathlib import Path
+import unicodedata
+
 import streamlit as st
+
+
+LOGO_PATH = Path(__file__).resolve().parents[1] / "assets" / "logo.png"
+
+NAV_ITEMS = [
+    {"label": "Inicio", "page": "dashboard", "terms": ["inicio", "dashboard", "panel"]},
+    {"label": "Enfermedades", "page": "diseases", "terms": ["enfermedades", "genes", "casos clinicos"]},
+    {"label": "Transcripción", "page": "transcription", "terms": ["transcripcion", "adn", "arn", "arnm"]},
+    {"label": "Traducción", "page": "translation", "terms": ["traduccion", "proteinas", "aminoacidos", "codones"]},
+    {"label": "Mutaciones", "page": "mutation_recognition", "terms": ["mutaciones", "blast", "alineamiento"]},
+    {"label": "Quiz", "page": "quiz", "terms": ["quiz", "evaluacion", "preguntas"]},
+    {"label": "Tutoriales", "page": "tutorials", "terms": ["tutoriales", "guias", "fasta", "ncbi"]},
+]
+
+SEARCH_TARGETS = NAV_ITEMS + [
+    {
+        "label": "Enfermedad de Huntington",
+        "page": "disease_detail",
+        "disease": "huntington",
+        "terms": ["huntington", "htt", "cag", "neurodegenerativa"],
+    },
+    {
+        "label": "Anemia falciforme",
+        "page": "disease_detail",
+        "disease": "anemia_falciforme",
+        "terms": ["anemia falciforme", "hbb", "hemoglobina", "gag", "gtg"],
+    },
+    {
+        "label": "Fibrosis quística",
+        "page": "disease_detail",
+        "disease": "fibrosis_quistica",
+        "terms": ["fibrosis quistica", "cftr", "delta f508", "delecion"],
+    },
+]
 
 
 def load_styles():
@@ -406,6 +443,38 @@ def brand_logo():
     )
 
 
+def _normalize_search(value):
+    normalized = unicodedata.normalize("NFKD", value or "")
+    ascii_value = normalized.encode("ascii", "ignore").decode("ascii")
+    return ascii_value.lower().strip()
+
+
+def _find_search_matches(query, limit=4):
+    normalized_query = _normalize_search(query)
+    if not normalized_query:
+        return []
+
+    matches = []
+    for target in SEARCH_TARGETS:
+        searchable = " ".join([target["label"], *target.get("terms", [])])
+        if normalized_query in _normalize_search(searchable):
+            matches.append(target)
+
+    return matches[:limit]
+
+
+def _go_to_target(target):
+    if target.get("disease"):
+        st.session_state.selected_disease = target["disease"]
+    st.session_state.page = target["page"]
+
+
+def _handle_nav_search():
+    matches = _find_search_matches(st.session_state.get("global_nav_search", ""), limit=1)
+    if matches:
+        _go_to_target(matches[0])
+
+
 def top_bar():
     user = st.session_state.get("user", {})
     name = user.get("name", "Estudiante") if isinstance(user, dict) else "Estudiante"
@@ -413,50 +482,185 @@ def top_bar():
 
     st.markdown("""
     <style>
-    .nav-logo-text {
-        font-size: 24px;
-        font-weight: 800;
-        color: #0F172A;
+    div[data-testid="stVerticalBlock"]:has(> div .biolearn-topbar-anchor) {
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        background: linear-gradient(135deg, #061A3A 0%, #0B2454 58%, #312E81 100%);
+        border: 1px solid rgba(96, 165, 250, 0.24);
+        border-radius: 0 0 18px 18px;
+        padding: 0.75rem 1rem 0.9rem;
+        margin: -0.15rem 0 1.5rem;
+        box-shadow: 0 18px 38px rgba(6, 26, 58, 0.22);
+    }
+
+    .biolearn-topbar-anchor {
+        height: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    .nav-brand {
         display: flex;
         align-items: center;
-        height: 40px;
-        line-height: 40px;
+        gap: 0.75rem;
+        min-height: 42px;
     }
+
+    .nav-brand-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        line-height: 1.1;
+    }
+
+    .nav-brand-title {
+        color: #FFFFFF !important;
+        font-size: 17px;
+        font-weight: 900;
+    }
+
+    .nav-brand-subtitle {
+        color: #93C5FD !important;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
     .nav-user-text {
-        font-size: 14.5px;
-        font-weight: 600;
-        color: #475569;
+        color: #DBEAFE !important;
+        font-size: 13px;
+        font-weight: 700;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        height: 40px;
-        line-height: 40px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    div.st-key-global_nav_search input {
+        height: 40px !important;
+        border-radius: 12px !important;
+        background: rgba(255, 255, 255, 0.98) !important;
+        border: 1px solid rgba(96, 165, 250, 0.52) !important;
+        color: #0F172A !important;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.16) !important;
+    }
+
+    div.st-key-global_nav_search label {
+        display: none !important;
+    }
+
+    div.st-key-global_nav_search input::placeholder {
+        color: #64748B !important;
+    }
+
+    div.st-key-global_nav_search input:focus {
+        border-color: #7C3AED !important;
+        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.22) !important;
+    }
+
+    div[class*="st-key-nav_btn_"] button,
+    div[class*="st-key-nav_result_"] button {
+        min-height: 34px !important;
+        height: 34px !important;
+        border-radius: 9px !important;
+        font-size: 12.5px !important;
+        font-weight: 800 !important;
+        padding: 0.2rem 0.55rem !important;
+        white-space: nowrap !important;
+    }
+
+    .nav-search-hint {
+        color: #BFDBFE !important;
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 0.35rem;
+    }
+
+    @media (max-width: 900px) {
+        div[data-testid="stVerticalBlock"]:has(> div .biolearn-topbar-anchor) {
+            padding: 0.8rem;
+            border-radius: 0 0 14px 14px;
+        }
+
+        .nav-brand-copy,
+        .nav-user-text {
+            display: none;
+        }
+
+        div[class*="st-key-nav_btn_"] button {
+            font-size: 11.5px !important;
+            padding-left: 0.25rem !important;
+            padding-right: 0.25rem !important;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
 
-    col_logo, col_nav1, col_nav2, col_nav3, col_user = st.columns([2.5, 1, 1, 1, 2.5])
+    with st.container():
+        st.markdown("<div class='biolearn-topbar-anchor'></div>", unsafe_allow_html=True)
 
-    with col_logo:
-        st.markdown("<div class='nav-logo-text'>BioLearn</div>", unsafe_allow_html=True)
+        col_logo, col_search, col_user = st.columns([1.55, 3.2, 1.25], gap="medium")
 
-    with col_nav1:
-        is_active = current_page in ["dashboard", "diseases", "disease_detail", "translation", "transcription", "mutation_recognition"]
-        if st.button("Inicio", key="nav_btn_home", use_container_width=True, type="primary" if is_active else "secondary"):
-            st.session_state.page = "dashboard"
-            st.rerun()
+        with col_logo:
+            logo_col, text_col = st.columns([0.6, 1.4], gap="small")
+            with logo_col:
+                st.image(str(LOGO_PATH), width=46)
+            with text_col:
+                st.markdown(
+                    """
+                    <div class="nav-brand">
+                        <div class="nav-brand-copy">
+                            <span class="nav-brand-title">BioLearn</span>
+                            <span class="nav-brand-subtitle">USIL</span>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
-    with col_nav2:
-        is_active = current_page == "quiz"
-        if st.button("Quiz", key="nav_btn_quiz", use_container_width=True, type="primary" if is_active else "secondary"):
-            st.session_state.page = "quiz"
-            st.rerun()
+        with col_search:
+            st.text_input(
+                "Buscar",
+                key="global_nav_search",
+                placeholder="Buscar herramientas o enfermedades...",
+                label_visibility="collapsed",
+                on_change=_handle_nav_search,
+            )
 
-    with col_nav3:
-        is_active = current_page == "tutorials"
-        if st.button("Tutoriales", key="nav_btn_tutorials", use_container_width=True, type="primary" if is_active else "secondary"):
-            st.session_state.page = "tutorials"
-            st.rerun()
+        with col_user:
+            st.markdown(f"<div class='nav-user-text'>{name}</div>", unsafe_allow_html=True)
 
-    with col_user:
-        st.markdown(f"<div class='nav-user-text'>{name}</div>", unsafe_allow_html=True)
+        nav_cols = st.columns([1, 1.3, 1.35, 1.2, 1.2, 0.85, 1.1], gap="small")
+        for index, item in enumerate(NAV_ITEMS):
+            is_active = current_page == item["page"] or (
+                item["page"] == "diseases" and current_page == "disease_detail"
+            )
+            with nav_cols[index]:
+                if st.button(
+                    item["label"],
+                    key=f"nav_btn_{item['page']}",
+                    use_container_width=True,
+                    type="primary" if is_active else "secondary",
+                ):
+                    _go_to_target(item)
+                    st.rerun()
+
+        matches = _find_search_matches(st.session_state.get("global_nav_search", ""))
+        if matches:
+            st.markdown("<div class='nav-search-hint'>Resultados rápidos</div>", unsafe_allow_html=True)
+            result_cols = st.columns(len(matches), gap="small")
+            for index, match in enumerate(matches):
+                with result_cols[index]:
+                    if st.button(
+                        match["label"],
+                        key=f"nav_result_{index}_{match['page']}",
+                        use_container_width=True,
+                        type="secondary",
+                    ):
+                        _go_to_target(match)
+                        st.rerun()
