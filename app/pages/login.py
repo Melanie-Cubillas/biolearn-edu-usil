@@ -22,25 +22,42 @@ def login_page():
                 st.markdown("<span class='pill'>Recuperación de cuenta</span>", unsafe_allow_html=True)
                 st.markdown("<div class='auth-title'>Restablecer contraseña</div>", unsafe_allow_html=True)
                 st.markdown(
-                    "<div class='auth-subtitle'>Ingresa tu correo institucional registrado y te enviaremos las instrucciones de recuperación.</div>",
+                    "<div class='auth-subtitle'>Ingresa tu correo institucional registrado y te enviaremos un enlace seguro para restablecer tu contraseña.</div>",
                     unsafe_allow_html=True
                 )
 
                 recovery_email = st.text_input("Correo institucional", placeholder="ejemplo@usil.pe", key="recovery_email")
 
-                if st.button("Enviar instrucciones", type="primary", use_container_width=True):
-                    if recovery_email.strip():
-                        try:
-                            reset_password(recovery_email.strip())
-                            st.success("Te enviaremos instrucciones de recuperación si el correo electrónico ingresado está registrado en la plataforma.")
-                        except Exception as e:
-                            st.error(f"Error al enviar instrucciones: {e}")
-                    else:
-                        st.error("Por favor, ingresa tu correo institucional.")
+                if st.session_state.get("password_reset_sent", False):
+                    st.success("Correo enviado: revisa tu bandeja de entrada y la carpeta de spam.")
+                    st.info("El enlace de restablecimiento llegará en breve. Si no lo ves, espera unos minutos o solicita nuevamente.")
 
-                if st.button("Volver al inicio de sesión", type="secondary", use_container_width=True):
-                    st.session_state.forgot_password = False
-                    st.rerun()
+                    if st.button("Volver al inicio de sesión", type="secondary", use_container_width=True):
+                        st.session_state.forgot_password = False
+                        st.session_state.password_reset_sent = False
+                        st.session_state.recovery_email = ""
+                        st.rerun()
+                else:
+                    if st.button("Enviar instrucciones", type="primary", use_container_width=True):
+                        if not recovery_email.strip():
+                            st.error("Por favor, ingresa tu correo institucional para continuar.")
+                        elif not is_supabase_configured():
+                            st.error("Supabase no está configurado. Revisa el archivo .env")
+                        else:
+                            try:
+                                reset_password(recovery_email.strip())
+                                st.session_state.password_reset_sent = True
+                                st.success("Solicitud recibida. Te enviaremos un correo si este correo está registrado en la plataforma.")
+                                st.info("Revisa tu bandeja de entrada y la carpeta de spam.")
+                            except Exception as e:
+                                st.error(f"No fue posible enviar el enlace. Verifica tu conexión e inténtalo de nuevo.")
+                                st.code(str(e))
+
+                    if st.button("Volver al inicio de sesión", type="secondary", use_container_width=True):
+                        st.session_state.forgot_password = False
+                        st.session_state.password_reset_sent = False
+                        st.session_state.recovery_email = ""
+                        st.rerun()
             else:
                 st.markdown("<span class='pill'>Bienvenida/o de nuevo</span>", unsafe_allow_html=True)
                 st.markdown("<div class='auth-title'>Inicia sesión</div>", unsafe_allow_html=True)

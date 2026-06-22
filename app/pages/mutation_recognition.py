@@ -1,3 +1,6 @@
+import math
+
+import plotly.express as px
 import streamlit as st
 import pandas as pd
 
@@ -5,6 +8,27 @@ from components.layout import load_styles, top_bar
 from pages.disease_detail import DISEASE_DATA
 from services.ncbi_service import get_sequence
 from services.blast_service import detect_mutations
+
+
+def similarity_progress_ring(percent: float) -> str:
+    radius = 56
+    circumference = 2 * math.pi * radius
+    dash_offset = circumference * (1 - min(max(percent, 0), 100) / 100)
+
+    return f"""
+    <div class="progress-ring">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle class="progress-ring-bg" cx="70" cy="70" r="{radius}" />
+            <circle class="progress-ring-progress" cx="70" cy="70" r="{radius}"
+                stroke-dasharray="{circumference:.2f} {circumference:.2f}"
+                stroke-dashoffset="{dash_offset:.2f}" />
+        </svg>
+        <div class="progress-ring-text">
+            <div style="font-size: 2rem;">{percent:.1f}%</div>
+            <span>Similitud</span>
+        </div>
+    </div>
+    """
 
 
 def mutation_recognition_page():
@@ -89,10 +113,51 @@ def mutation_recognition_page():
 
         col1, col2, col3, col4 = st.columns(4)
 
-        col1.metric("Identidad", f"{alignment['identity_percent']}%")
+        col1.markdown(similarity_progress_ring(alignment["identity_percent"]), unsafe_allow_html=True)
         col2.metric("Coincidencias", alignment["matches"])
         col3.metric("Diferencias", alignment["mismatches"])
         col4.metric("Gaps", alignment["gaps"])
+
+        st.subheader("Distribución de tipos de mutaciones")
+
+        mutation_type_counts = {
+            "Sustitución": sum(1 for mutation in result["mutations"] if mutation["type"] == "Sustitución"),
+            "Inserción": sum(1 for mutation in result["mutations"] if mutation["type"] == "Inserción"),
+            "Deleción": sum(1 for mutation in result["mutations"] if mutation["type"] == "Deleción"),
+        }
+
+        mutation_chart_data = pd.DataFrame({
+            "Tipo": list(mutation_type_counts.keys()),
+            "Cantidad": list(mutation_type_counts.values()),
+        })
+
+        if mutation_chart_data["Cantidad"].sum() > 0:
+            mutation_fig = px.pie(
+                mutation_chart_data,
+                names="Tipo",
+                values="Cantidad",
+                hole=0.38,
+                color="Tipo",
+                color_discrete_map={
+                    "Sustitución": "#2563EB",
+                    "Inserción": "#10B981",
+                    "Deleción": "#EF4444",
+                },
+            )
+            mutation_fig.update_traces(
+                textinfo="percent+label",
+                textfont_size=13,
+                marker=dict(line=dict(color="#FFFFFF", width=2)),
+            )
+            mutation_fig.update_layout(
+                margin=dict(l=0, r=0, t=20, b=0),
+                legend=dict(orientation="h", y=-0.16),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+            )
+            st.plotly_chart(mutation_fig, use_container_width=True, config={"displayModeBar": False})
+        else:
+            st.info("No se encontraron mutaciones para clasificar visualmente.")
 
         st.subheader("Comparación tipo BLAST educativo")
 

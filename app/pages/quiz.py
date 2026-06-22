@@ -9,6 +9,45 @@ from services.supabase_service import (
 )
 
 
+def get_mastery_rank(score: int, total: int) -> dict:
+    ratio = score / total if total else 0
+
+    if ratio == 1:
+        return {
+            "title": "Especialista en Genomas",
+            "subtitle": "Tu dominio es sobresaliente. Has alcanzado el nivel máximo de maestría bioinformática.",
+            "badge": "Maestría total",
+            "tone": "success"
+        }
+    if ratio >= 0.8:
+        return {
+            "title": "Investigador Junior",
+            "subtitle": "Buen trabajo. Sigue avanzando para convertirte en un experto del ADN.",
+            "badge": "Nivel avanzado",
+            "tone": "info"
+        }
+    if ratio >= 0.6:
+        return {
+            "title": "Analista Experimental",
+            "subtitle": "Vas por muy buen camino. Repasa un poco para consolidar los conceptos.",
+            "badge": "En ascenso",
+            "tone": "info"
+        }
+    if ratio >= 0.4:
+        return {
+            "title": "Explorador de Secuencias",
+            "subtitle": "Tienes bases sólidas. Identifica las áreas con más dudas y refuerza tu aprendizaje.",
+            "badge": "Potencial detectado",
+            "tone": "warning"
+        }
+    return {
+        "title": "Aprendiz de ADN",
+        "subtitle": "Cada intento construye experiencia. Usa la sección de revisión para avanzar rápido.",
+        "badge": "Inicio de viaje",
+        "tone": "warning"
+    }
+
+
 def quiz_page():
     load_styles()
     top_bar()
@@ -166,13 +205,67 @@ def quiz_page():
         if st.session_state.get("quiz_submitted"):
             score = st.session_state.quiz_score
             total = st.session_state.quiz_total
+            rank = get_mastery_rank(score, total)
 
-            if score == total:
-                st.success("Excelente. Dominas los conceptos evaluados de bioinformática.")
-            elif score >= total / 2:
-                st.info("Buen avance. Revisa los temas donde tuviste dudas.")
-            else:
-                st.warning("Te recomendamos revisar los tutoriales antes de volver a intentarlo.")
+            st.markdown(
+                f"""
+                <div class='quiz-rank-card'>
+                    <div style='display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;'>
+                        <div>
+                            <div class='quiz-rank-title'>{rank['title']}</div>
+                            <div class='quiz-rank-subtitle'>{rank['subtitle']}</div>
+                        </div>
+                        <div class='quiz-rank-badge'>{rank['badge']}</div>
+                    </div>
+                    <div style='margin-top:1rem; font-size:1rem; color:#475569;'>
+                        Has respondido correctamente <strong>{score}</strong> de <strong>{total}</strong> preguntas.
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            with st.expander("Revisar Errores", expanded=True):
+                wrong_answers = []
+
+                for question in questions:
+                    selected_key = f"question_{question['id']}"
+                    selected_text = st.session_state.get(selected_key)
+                    correct_option = next((opt for opt in question.get("quiz_options", []) if opt.get("is_correct")), None)
+                    correct_text = correct_option["option_text"] if correct_option else "Respuesta correcta no disponible"
+
+                    if selected_text is None or selected_text != correct_text:
+                        wrong_answers.append({
+                            "question": question["question"],
+                            "selected": selected_text or "No respondiste esta pregunta.",
+                            "correct": correct_text,
+                            "explanation": question.get("explanation", "No hay explicación disponible.")
+                        })
+
+                if wrong_answers:
+                    st.markdown("<div class='quiz-review-card'>", unsafe_allow_html=True)
+                    st.markdown("<strong>Estos son los puntos clave para mejorar:</strong>", unsafe_allow_html=True)
+
+                    for wrong in wrong_answers:
+                        st.markdown(
+                            f"""
+                            <div class='quiz-review-item'>
+                                <strong>{wrong['question']}</strong>
+                                <div class='quiz-review-answer'>Tu respuesta: {wrong['selected']}</div>
+                                <div class='quiz-review-answer'>Respuesta correcta: {wrong['correct']}</div>
+                                <div class='quiz-review-answer'>Sugerencia: {wrong['explanation']}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+
+                    st.markdown(
+                        "<div class='quiz-review-note'>Repasa estos conceptos en los módulos de tutoriales e intenta nuevamente para subir al siguiente nivel.</div>",
+                        unsafe_allow_html=True
+                    )
+                    st.markdown("</div>", unsafe_allow_html=True)
+                else:
+                    st.success("¡Perfecto! No hay errores en esta ronda. Sigue así para mantener tu racha de aprendizaje.")
 
     except Exception as error:
         st.error("Ocurrió un error al cargar o guardar el quiz.")

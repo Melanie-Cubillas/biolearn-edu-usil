@@ -295,6 +295,111 @@ def load_styles():
         color: white !important;
     }
 
+    .progress-ring {
+        width: 140px;
+        height: 140px;
+        position: relative;
+        margin: 0 auto 1rem auto;
+    }
+    .progress-ring svg {
+        transform: rotate(-90deg);
+    }
+    .progress-ring-bg,
+    .progress-ring-progress {
+        fill: none;
+        stroke-width: 14;
+    }
+    .progress-ring-bg {
+        stroke: #E2E8F0;
+    }
+    .progress-ring-progress {
+        stroke: #2563EB;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 1.2s ease-out;
+    }
+    .progress-ring-text {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-weight: 700;
+        color: #0F172A;
+    }
+    .progress-ring-text span {
+        color: #475569;
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin-top: 0.2rem;
+    }
+
+    .quiz-rank-card {
+        border: 1px solid rgba(14, 165, 233, 0.18);
+        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(239,246,255,0.9));
+        border-radius: 18px;
+        padding: 1.35rem 1.4rem;
+        box-shadow: 0 18px 40px rgba(14, 165, 233, 0.08);
+        margin: 1rem 0 1.5rem 0;
+    }
+    .quiz-rank-title {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #1E3A8A;
+        margin-bottom: 0.35rem;
+    }
+    .quiz-rank-subtitle {
+        font-size: 0.98rem;
+        color: #475569;
+        line-height: 1.6;
+    }
+    .quiz-rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #EFF6FF;
+        color: #1D4ED8;
+        border-radius: 999px;
+        padding: 0.65rem 1rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+        border: 1px solid rgba(59, 130, 246, 0.15);
+    }
+    .quiz-review-card {
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 1rem 1rem 1.15rem 1rem;
+        margin-bottom: 1rem;
+    }
+    .quiz-review-item {
+        border-radius: 14px;
+        background: #f8fafc;
+        padding: 1rem;
+        margin: 0.75rem 0;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+    }
+    .quiz-review-answer {
+        margin-top: 0.45rem;
+        font-size: 0.95rem;
+        color: #475569;
+        line-height: 1.5;
+    }
+    .quiz-review-item strong {
+        color: #0F172A;
+        display: block;
+        margin-bottom: 0.45rem;
+    }
+    .quiz-review-note {
+        margin-top: 0.7rem;
+        padding: 0.9rem 1rem;
+        background: #f0f9ff;
+        border-radius: 14px;
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        color: #0f172a;
+        font-weight: 600;
+    }
+
     /* Botón Secundario */
     .stButton > button[kind="secondary"],
     .stButton > button.stBaseButton-secondary {
