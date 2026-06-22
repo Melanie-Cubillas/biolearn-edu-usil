@@ -175,6 +175,132 @@ En la práctica clínica bioinformática, un alineamiento local permite observar
 }
 
 
+def render_upcoming_section():
+    st.markdown("""
+    <style>
+    .upcoming-module {
+        margin-top: 2rem;
+    }
+    .upcoming-header {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 1rem;
+    }
+    .upcoming-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+    .upcoming-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 220px;
+        padding: 1.5rem;
+        border-radius: 22px;
+        color: white;
+        background: linear-gradient(180deg, rgba(15,23,42,0.9) 0%, rgba(15,23,42,0.72) 100%);
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 18px 40px rgba(15,23,42,0.12);
+        backdrop-filter: blur(16px);
+        transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+    }
+    .upcoming-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 24px 50px rgba(15,23,42,0.18);
+        border-color: rgba(59,130,246,0.3);
+    }
+    .upcoming-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top right, rgba(59,130,246,0.36), transparent 32%),
+                    radial-gradient(circle at bottom left, rgba(16,185,129,0.22), transparent 30%);
+        opacity: 0.9;
+    }
+    .upcoming-card-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        justify-content: space-between;
+    }
+    .upcoming-lock {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        margin-bottom: 1rem;
+        font-size: 1.3rem;
+        border: 1px solid rgba(255,255,255,0.16);
+    }
+    .upcoming-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.65rem;
+    }
+    .upcoming-desc {
+        color: rgba(226, 232, 240, 0.95);
+        line-height: 1.6;
+        font-size: 0.96rem;
+        margin-bottom: 1.1rem;
+    }
+    .upcoming-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: rgba(255,255,255,0.12);
+        color: #F8FAFC;
+        padding: 0.45rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        border: 1px solid rgba(255,255,255,0.14);
+        width: fit-content;
+    }
+    </style>
+    <div class='upcoming-module'>
+        <div class='upcoming-header'>Próximamente / Próxima Edición</div>
+        <div class='upcoming-grid'>
+            <div class='upcoming-card'>
+                <div class='upcoming-card-content'>
+                    <div class='upcoming-lock'>🔒</div>
+                    <div>
+                        <div class='upcoming-title'>Modelado de Proteínas en 3D</div>
+                        <div class='upcoming-desc'>Interactividad inmersiva con visualizaciones de cadena polipeptídica y predicción de pliegues.</div>
+                    </div>
+                    <div class='upcoming-badge'>Próximo lanzamiento</div>
+                </div>
+            </div>
+            <div class='upcoming-card'>
+                <div class='upcoming-card-content'>
+                    <div class='upcoming-lock'>🔒</div>
+                    <div>
+                        <div class='upcoming-title'>Herramientas CRISPR-Cas9</div>
+                        <div class='upcoming-desc'>Simulaciones seguras de edición génica y diseño de guías para casos reales de biotecnología.</div>
+                    </div>
+                    <div class='upcoming-badge'>Edición avanzada</div>
+                </div>
+            </div>
+            <div class='upcoming-card'>
+                <div class='upcoming-card-content'>
+                    <div class='upcoming-lock'>🔒</div>
+                    <div>
+                        <div class='upcoming-title'>Análisis de Datos Genómicos Big Data</div>
+                        <div class='upcoming-desc'>Procesamiento escalable de genomas completos con flujos de trabajo automatizados y visualizaciones inteligentes.</div>
+                    </div>
+                    <div class='upcoming-badge'>Próximo módulo</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def tutorials_page():
     load_styles()
     top_bar()
@@ -304,6 +430,8 @@ def tutorials_page():
                         st.rerun()
 
         st.markdown("<br>", unsafe_allow_html=True)
+        render_upcoming_section()
+
         if st.button("Volver al inicio", type="secondary", use_container_width=True):
             st.session_state.page = "dashboard"
             st.rerun()
