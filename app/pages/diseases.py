@@ -7,7 +7,6 @@ DISEASES = [
     {
         "name": "Enfermedad de Huntington",
         "key": "huntington",
-        "icon": "🧬",
         "gene": "HTT",
         "description": "Trastorno genético asociado a repeticiones CAG en el gen HTT.",
         "bg_color": "#E0F2FE",
@@ -18,7 +17,6 @@ DISEASES = [
     {
         "name": "Anemia falciforme",
         "key": "anemia_falciforme",
-        "icon": "🩸",
         "gene": "HBB",
         "description": "Enfermedad hereditaria que altera la hemoglobina y la forma de los glóbulos rojos.",
         "bg_color": "#ffe8fa",
@@ -29,7 +27,6 @@ DISEASES = [
     {
         "name": "Fibrosis quística",
         "key": "fibrosis_quistica",
-        "icon": "🫁",
         "gene": "CFTR",
         "description": "Enfermedad genética relacionada con mutaciones en el gen CFTR.",
         "bg_color": "#DCFCE7",
@@ -141,8 +138,8 @@ def disease_card(disease):
     st.markdown(
         f"""
         <div class="disease-card" style="background:{disease['bg_color']}; border:1px solid {disease['border_color']};">
-            <div class="disease-icon">{disease['icon']}</div>
-            <div class="disease-name">{disease['name']}</div>
+            <div style="font-size: 11px; font-weight: 800; color: {disease['tag_color']}; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">Caso de Estudio</div>
+            <div class="disease-name" style="margin-top: 0.5rem;">{disease['name']}</div>
             <div class="gene-badge" style="background:{disease['tag_bg']}; color:{disease['tag_color']};">
                 Gen asociado: {disease['gene']}
             </div>
@@ -152,9 +149,19 @@ def disease_card(disease):
         unsafe_allow_html=True,
     )
 
-    if st.button("Aprender →", key=f"learn_{disease['key']}", use_container_width=True):
+    if st.button("Aprender", key=f"learn_{disease['key']}", use_container_width=True):
         st.session_state.selected_disease = disease["key"]
-        st.session_state.progress = max(st.session_state.get("progress", 0), 20)
+        new_progress = max(st.session_state.get("progress", 0), 20)
+        st.session_state.progress = new_progress
+        user = st.session_state.get("user", {})
+        if isinstance(user, dict) and "email" in user:
+            from services.progress_service import save_user_progress
+            save_user_progress(
+                user["email"],
+                new_progress,
+                st.session_state.get("streak", 1),
+                st.session_state.get("badges", 0)
+            )
         st.session_state.page = "disease_detail"
         st.rerun()
 
@@ -166,7 +173,7 @@ def diseases_page():
 
     st.markdown(
         """
-        <div class="disease-title">Aprender sobre Bioinformática 🔗</div>
+        <div class="disease-title">Aprender sobre Bioinformática</div>
         <div class="disease-subtitle">
             Elige una enfermedad genética para explorar su base molecular, secuencias y mutaciones.
         </div>
@@ -187,6 +194,6 @@ def diseases_page():
 
     st.divider()
 
-    if st.button("← Volver al inicio", key="back_dashboard"):
+    if st.button("Volver al inicio", key="back_dashboard", type="secondary", use_container_width=True):
         st.session_state.page = "dashboard"
         st.rerun()

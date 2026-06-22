@@ -93,3 +93,9 @@ def save_quiz_result(
     )
 
     return response.data
+
+
+def reset_password(email: str):
+    client = get_supabase()
+    response = client.auth.reset_password_for_email(email)
+    return response

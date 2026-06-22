@@ -20,24 +20,16 @@ def mutation_recognition_page():
     reference = disease["reference_sequence"].replace(" ", "")
     mutated = disease["mutated_sequence"].replace(" ", "")
 
-    mode = st.radio(
-        "Selecciona el modo",
-        ["Modo guiado", "Modo exploratorio"],
-        horizontal=True
-    )
+    # Selector de modo visual e inhabilitado para Exploratorio
+    st.markdown("<p style='font-size: 14.5px; font-weight: 600; color: #475569; margin-bottom: 8px;'>Selecciona el modo</p>", unsafe_allow_html=True)
+    st.markdown("""
+    <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1.5rem;">
+        <div style="padding: 0.5rem 1rem; background: #3B82F6; color: white; border-radius: 8px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 10px rgba(59,130,246,0.2);">Modo guiado</div>
+        <div style="padding: 0.5rem 1rem; background: #F1F5F9; color: #94A3B8; border-radius: 8px; border: 1px dashed #CBD5E1; font-size: 14px; cursor: not-allowed;">Modo exploratorio (Disponible próximamente)</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     ncbi_data = None
-
-    if mode == "Modo exploratorio":
-        st.info("En este modo puedes obtener una secuencia real desde NCBI y guardarla como FASTA local.")
-
-        accession_id = st.text_input("Accession ID", value="NM_002111")
-
-        if st.button("Buscar en NCBI"):
-            ncbi_data = get_sequence(accession_id)
-            st.session_state["mutation_ncbi"] = ncbi_data
-            st.session_state["mutation_sequence"] = ncbi_data["sequence"]
-
     ncbi_data = st.session_state.get("mutation_ncbi", ncbi_data)
 
     if "mutation_sequence" in st.session_state:
@@ -46,7 +38,7 @@ def mutation_recognition_page():
     reference = st.text_area("Secuencia referencial", value=reference, height=100)
     mutated = st.text_area("Secuencia mutada / analizada", value=mutated, height=100)
 
-    if st.button("Reconocer mutaciones"):
+    if st.button("Reconocer mutaciones", type="primary"):
         result = detect_mutations(reference, mutated, disease_key=disease_key)
         alignment = result["alignment"]
 
@@ -86,15 +78,18 @@ def mutation_recognition_page():
         st.write(f"Patrón evaluado: {finding['pattern']}")
         st.write(f"Valor en referencia: {finding['reference_value']}")
         st.write(f"Valor en secuencia analizada: {finding['query_value']}")
-        st.warning(finding["interpretation"])
+        
+        # Eliminar emojis de la interpretación si existen
+        interpretation_clean = finding["interpretation"].replace("🧬", "").replace("🩸", "").replace("🫁", "").strip()
+        st.warning(interpretation_clean)
 
         st.subheader("Interpretación educativa")
 
         if disease_key == "huntington" and "Expansión" in finding["interpretation"]:
             st.write("La expansión de CAG puede alterar la proteína huntingtina.")
 
-        elif disease_key == "anemia_falciforme" and "GAG → GTG" in finding["interpretation"]:
-            st.write("El cambio GAG → GTG puede modificar la hemoglobina y relacionarse con anemia falciforme.")
+        elif disease_key == "anemia_falciforme" and "GAG" in finding["interpretation"]:
+            st.write("El cambio GAG a GTG puede modificar la hemoglobina y relacionarse con anemia falciforme.")
 
         elif disease_key == "fibrosis_quistica" and "deleción" in finding["interpretation"].lower():
             st.write("La deleción en CFTR puede afectar el transporte de iones y alterar la función celular.")
@@ -104,22 +99,18 @@ def mutation_recognition_page():
         else:
             st.write("No se detectaron diferencias respecto a la secuencia referencial.")
                 
-        st.subheader("¿Cómo se solucionó?")
+        st.subheader("Resolución paso a paso")
         for step in result["steps"]:
             st.write(step)
 
         if ncbi_data:
             st.subheader("Información NCBI / FASTA")
-            st.write(f"ID: {ncbi_data['id']}")
+            st.write(f"ID de acceso: {ncbi_data['id']}")
             st.write(f"Descripción: {ncbi_data['description']}")
-            st.write(f"Longitud: {ncbi_data['length']}")
-            st.write(f"Fuente: {ncbi_data['source']}")
-            st.write(f"Archivo local: {ncbi_data['file_path']}")
+            st.write(f"Fuente de datos: {ncbi_data['source']}")
+            if "length" in ncbi_data:
+                st.write(f"Longitud de la secuencia: {ncbi_data['length']} pb")
 
-            st.subheader("Pasos de lectura/escritura FASTA")
-            for step in ncbi_data["steps"]:
-                st.write(step)
-
-    if st.button("Volver"):
+    if st.button("Volver", type="secondary", use_container_width=True):
         st.session_state.page = "disease_detail"
         st.rerun()
