@@ -110,31 +110,37 @@ def quiz_page():
             except ValueError:
                 saved_idx = None
 
+            st.markdown("<div style='margin: 1rem 0;'></div>", unsafe_allow_html=True)
+            st.markdown("<style>.stRadio > label { display: none; }</style>", unsafe_allow_html=True)
+            
             selected_label = st.radio(
                 "Selecciona una respuesta",
                 list(option_map.keys()),
                 index=saved_idx,
                 disabled=st.session_state.quiz_submitted,
-                key=f"question_{question['id']}"
+                key=f"question_{question['id']}",
+                label_visibility="collapsed"
             )
 
-            if selected_label is None:
+            if selected_label is None and saved_val is None:
                 unanswered_questions.append(index + 1)
-            else:
-                selected_answers[question["id"]] = option_map[selected_label]
+            elif selected_label or saved_val:
+                final_selection = selected_label or saved_val
+                if final_selection in option_map:
+                    selected_answers[question["id"]] = option_map[final_selection]
 
             if st.session_state.quiz_submitted:
-                user_opt = option_map.get(selected_label)
+                user_opt = option_map.get(saved_val) if saved_val else None
                 if user_opt:
                     if user_opt["is_correct"]:
-                        st.success("Respuesta correcta")
+                        st.success("✅ Respuesta correcta")
                     else:
-                        st.error("Respuesta incorrecta")
+                        st.error("❌ Respuesta incorrecta")
                         correct_opt = next((o for o in options if o["is_correct"]), None)
                         if correct_opt:
-                            st.info(f"Respuesta correcta: {correct_opt['option_text']}")
+                            st.info(f"✓ Respuesta correcta: {correct_opt['option_text']}")
                 else:
-                    st.warning("No respondiste esta pregunta.")
+                    st.warning("⚠️ No respondiste esta pregunta.")
 
                 st.markdown(f"**Explicación:** {question.get('explanation', 'Sin explicación disponible.')}")
                 st.divider()
@@ -210,15 +216,19 @@ def quiz_page():
             st.markdown(
                 f"""
                 <div class='quiz-rank-card'>
-                    <div style='display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;'>
+                    <div style='display:flex; align-items:center; justify-content:space-between; gap:2rem; flex-wrap:wrap;'>
                         <div>
+                            <div style='font-size: 2.8rem; font-weight: 900; color: #2563EB; margin-bottom: 0.5rem;'>{rank['badge']}</div>
                             <div class='quiz-rank-title'>{rank['title']}</div>
                             <div class='quiz-rank-subtitle'>{rank['subtitle']}</div>
                         </div>
-                        <div class='quiz-rank-badge'>{rank['badge']}</div>
+                        <div style='text-align: center; min-width: 120px;'>
+                            <div style='font-size: 3rem; font-weight: 900; color: #2563EB;'>{score}</div>
+                            <div style='font-size: 1rem; color: #64748B; margin-top: 0.25rem; font-weight: 600;'>de {total}</div>
+                        </div>
                     </div>
-                    <div style='margin-top:1rem; font-size:1rem; color:#475569;'>
-                        Has respondido correctamente <strong>{score}</strong> de <strong>{total}</strong> preguntas.
+                    <div style='margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #E2E8F0; font-size: 1rem; color: #475569; line-height: 1.6;'>
+                        ✨ Respondiste correctamente <strong>{score} de {total}</strong> preguntas. Continúa practicando para dominar la bioinformática.
                     </div>
                 </div>
                 """,
