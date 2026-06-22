@@ -1,4 +1,5 @@
 import math
+import re
 
 import plotly.express as px
 import streamlit as st
@@ -8,6 +9,29 @@ from components.layout import load_styles, top_bar
 from pages.disease_detail import DISEASE_DATA
 from services.ncbi_service import get_sequence
 from services.blast_service import detect_mutations
+
+
+def validate_dna_sequence(sequence: str) -> tuple[bool, str]:
+    """Validate DNA sequence (ATCG only, case-insensitive)."""
+    seq_clean = sequence.strip().upper().replace(" ", "").replace("\n", "")
+    if not seq_clean:
+        return False, "Por favor, ingresa una secuencia."
+    if not re.match(r"^[ATCG]+$", seq_clean):
+        invalid_chars = set(seq_clean) - set("ATCG")
+        return False, f"La secuencia contiene caracteres inválidos: {', '.join(sorted(invalid_chars))}. Solo se permiten A, T, C, G."
+    if len(seq_clean) < 5:
+        return False, "La secuencia debe tener al menos 5 bases nitrogenadas."
+    return True, seq_clean
+
+
+def render_validation_error(message: str):
+    """Render custom validation error card."""
+    st.markdown(f"""
+    <div style='border: 1px solid #FECACA; background: #FEF2F2; border-radius: 14px; padding: 1rem; margin: 1rem 0;'>
+        <div style='color: #991B1B; font-weight: 700; margin-bottom: 0.5rem;'>Validación requerida</div>
+        <div style='color: #7F1D1D; font-size: 0.95rem;'>{message}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def similarity_progress_ring(percent: float) -> str:
@@ -106,6 +130,18 @@ def mutation_recognition_page():
     st.session_state["mutation_sequence"] = mutated
 
     if st.button("Reconocer mutaciones", type="primary"):
+        ref_valid, ref_msg = validate_dna_sequence(reference)
+        mut_valid, mut_msg = validate_dna_sequence(mutated)
+        
+        if not ref_valid:
+            render_validation_error(f"Secuencia referencial: {ref_msg}")
+            st.stop()
+        if not mut_valid:
+            render_validation_error(f"Secuencia analizada: {mut_msg}")
+            st.stop()
+        
+        reference = ref_msg
+        mutated = mut_msg
         result = detect_mutations(reference, mutated, disease_key=disease_key)
         alignment = result["alignment"]
 
@@ -146,14 +182,16 @@ def mutation_recognition_page():
             )
             mutation_fig.update_traces(
                 textinfo="percent+label",
-                textfont_size=13,
-                marker=dict(line=dict(color="#FFFFFF", width=2)),
+                textfont_size=12,
+                textposition="outside",
+                marker=dict(line=dict(color="#FFFFFF", width=2.5)),
             )
             mutation_fig.update_layout(
-                margin=dict(l=0, r=0, t=20, b=0),
-                legend=dict(orientation="h", y=-0.16),
+                margin=dict(l=40, r=40, t=40, b=80),
+                legend=dict(orientation="h", y=-0.22, x=0.5, xanchor="center", font=dict(size=12, family="Outfit, sans-serif")),
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Outfit, sans-serif", size=12, color="#0F172A"),
             )
             st.plotly_chart(mutation_fig, use_container_width=True, config={"displayModeBar": False})
         else:

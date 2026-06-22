@@ -1,4 +1,5 @@
 import html
+import re
 
 import streamlit as st
 
@@ -6,6 +7,29 @@ from components.layout import load_styles, top_bar
 from pages.disease_detail import DISEASE_DATA
 from services.ncbi_service import get_sequence
 from services.bioinformatics_service import transcribe_dna_to_rna, find_stop_codons
+
+
+def validate_dna_sequence(sequence: str) -> tuple[bool, str]:
+    """Validate DNA sequence (ATCG only)."""
+    seq_clean = sequence.strip().upper().replace(" ", "").replace("\n", "")
+    if not seq_clean:
+        return False, "Por favor, ingresa una secuencia de ADN."
+    if not re.match(r"^[ATCG]+$", seq_clean):
+        invalid_chars = set(seq_clean) - set("ATCG")
+        return False, f"Caracteres inválidos detectados: {', '.join(sorted(invalid_chars))}. Solo permite A, T, C, G."
+    if len(seq_clean) < 5:
+        return False, "La secuencia debe tener al menos 5 bases."
+    return True, seq_clean
+
+
+def render_validation_error(message: str):
+    """Render custom validation error card."""
+    st.markdown(f"""
+    <div style='border: 1px solid #FECACA; background: #FEF2F2; border-radius: 14px; padding: 1rem; margin: 1rem 0;'>
+        <div style='color: #991B1B; font-weight: 700; margin-bottom: 0.5rem;'>Validación requerida</div>
+        <div style='color: #7F1D1D; font-size: 0.95rem;'>{message}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def _sequence_tokens(sequence, token_size=1, limit=180):
@@ -325,7 +349,12 @@ def transcription_page():
     st.session_state["transcription_dna"] = dna
 
     if st.button("Transcribir ADN a ARN", type="primary"):
-        result = transcribe_dna_to_rna(dna)
+        is_valid, dna_clean = validate_dna_sequence(dna)
+        if not is_valid:
+            render_validation_error(dna_clean)
+            st.stop()
+        
+        result = transcribe_dna_to_rna(dna_clean)
         stop_codons = find_stop_codons(result["rna"])
 
         render_transcription_result(result, stop_codons)

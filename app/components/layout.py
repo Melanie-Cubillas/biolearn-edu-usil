@@ -400,6 +400,73 @@ def load_styles():
         font-weight: 600;
     }
 
+    .quiz-option-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        border: 2px solid #E2E8F0;
+        border-radius: 12px;
+        background: #F8FAFC;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        margin-bottom: 0.75rem;
+    }
+    .quiz-option-card:hover {
+        border-color: #2563EB;
+        background: #EEF2FF;
+        box-shadow: 0 8px 16px rgba(37, 99, 235, 0.12);
+        transform: translateY(-2px);
+    }
+    .quiz-option-card.selected {
+        border-color: #2563EB;
+        background: #EEF2FF;
+        font-weight: 700;
+    }
+    .quiz-option-card.correct {
+        border-color: #86EFAC;
+        background: #F0FDF4;
+    }
+    .quiz-option-card.incorrect {
+        border-color: #FECACA;
+        background: #FEF2F2;
+    }
+
+    .validation-error-card {
+        border: 1px solid #FECACA;
+        background: #FEF2F2;
+        border-radius: 14px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+    .validation-error-card-title {
+        color: #991B1B;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    .validation-error-card-message {
+        color: #7F1D1D;
+        font-size: 0.95rem;
+    }
+
+    /* Radio button styling for quiz options */
+    .stRadio > div {
+        gap: 0.75rem;
+    }
+    .stRadio > div > label {
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        border: 1px solid #E2E8F0;
+        background: #F8FAFC;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        margin-bottom: 0.5rem;
+    }
+    .stRadio > div > label:hover {
+        border-color: #3B82F6;
+        background: #EEF2FF;
+    }
+
     /* Botón Secundario */
     .stButton > button[kind="secondary"],
     .stButton > button.stBaseButton-secondary {

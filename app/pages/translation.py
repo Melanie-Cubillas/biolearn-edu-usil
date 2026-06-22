@@ -10,6 +10,29 @@ from services.ncbi_service import get_sequence
 from services.bioinformatics_service import translate_dna_to_protein
 
 
+def validate_dna_sequence(sequence: str) -> tuple[bool, str]:
+    """Validate DNA sequence (ATCG only)."""
+    seq_clean = sequence.strip().upper().replace(" ", "").replace("\n", "")
+    if not seq_clean:
+        return False, "Por favor, ingresa una secuencia de ADN para traducir."
+    if not re.match(r"^[ATCG]+$", seq_clean):
+        invalid_chars = set(seq_clean) - set("ATCG")
+        return False, f"Caracteres inválidos: {', '.join(sorted(invalid_chars))}. Solo permite A, T, C, G."
+    if len(seq_clean) < 3:
+        return False, "La secuencia debe tener al menos 3 bases (1 codón)."
+    return True, seq_clean
+
+
+def render_validation_error(message: str):
+    """Render custom validation error card."""
+    st.markdown(f"""
+    <div style='border: 1px solid #FECACA; background: #FEF2F2; border-radius: 14px; padding: 1rem; margin: 1rem 0;'>
+        <div style='color: #991B1B; font-weight: 700; margin-bottom: 0.5rem;'>Validación requerida</div>
+        <div style='color: #7F1D1D; font-size: 0.95rem;'>{message}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def _sequence_tokens(sequence, token_size=1, limit=180):
     sequence = (sequence or "")[:limit]
     return "".join(
@@ -420,28 +443,12 @@ def translation_page():
     st.session_state["translation_dna"] = dna
 
     if st.button("Traducir ADN a proteína", type="primary"):
-        if not re.fullmatch(r"[ACTG]+", dna or "", flags=re.IGNORECASE):
-            st.toast("Secuencia inválida: usa únicamente A, C, T o G.", icon=":material/warning:")
-            st.markdown(
-                """
-                <div style="
-                    margin: 1rem 0;
-                    padding: 1rem 1.1rem;
-                    border-radius: 12px;
-                    background: linear-gradient(135deg, #EFF6FF 0%, #EEF2FF 100%);
-                    border: 1px solid #60A5FA;
-                    color: #0B2454;
-                    font-weight: 700;
-                    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-                ">
-                    Validación USIL: la secuencia de ADN solo puede contener los nucleótidos A, C, T y G.
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            return
+        is_valid, dna_clean = validate_dna_sequence(dna)
+        if not is_valid:
+            render_validation_error(dna_clean)
+            st.stop()
 
-        result = translate_dna_to_protein(dna)
+        result = translate_dna_to_protein(dna_clean)
         df = pd.DataFrame(result["codon_table"])
         render_translation_result(result, df)
 
