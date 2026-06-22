@@ -178,8 +178,13 @@ def quiz_page():
                     st.session_state.quiz_submitted = True
 
                     # Actualizar progreso e insignias
-                    new_progress = max(st.session_state.get("progress", 0), 80)
-                    st.session_state.progress = new_progress
+                    # Grant progress only once per user action (quiz submission).
+                    if not st.session_state.get("completed_quiz", False):
+                        increment = 20
+                        st.session_state.progress = min(100, st.session_state.get("progress", 0) + increment)
+                        st.session_state.completed_quiz = True
+
+                    new_progress = st.session_state.get("progress", 0)
 
                     new_badges = st.session_state.get("badges", 0)
                     if score == total:

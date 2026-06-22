@@ -55,14 +55,15 @@ def _step_cards(steps):
 def _stop_codon_cards(stop_codons):
     if not stop_codons:
         return """
-        <div class="bio-empty-state">
-            No se encontró codón de parada UAA, UAG o UGA en el fragmento analizado.
+        <div style='display:inline-block; min-width:320px; background: linear-gradient(90deg, rgba(59,130,246,0.06), rgba(99,102,241,0.04)); border: 1px solid rgba(59,130,246,0.12); padding: 0.85rem 1rem; border-radius: 12px; color: #0F172A; font-weight:700;'>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" style="vertical-align:middle; margin-right:.5rem;"><path d="M11 7h2v6h-2V7zm0 8h2v2h-2v-2z" stroke="#2563EB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="#93C5FD" stroke-width="1.2"/></svg>
+            No se encontró codón de parada en el fragmento analizado.
         </div>
         """
 
     return "".join(
         f"""
-        <div class="stop-card">
+        <div class="stop-card" style="display:inline-block; white-space:normal; margin-right:.5rem;">
             <div class="stop-codon">{html.escape(item["codon"])}</div>
             <div>Codón #{item["codon_position"]}</div>
             <small>Base inicial: {item["base_position"]}</small>
@@ -131,7 +132,7 @@ def render_transcription_result(result, stop_codons):
             padding-right: 0.2rem;
         }}
 
-        .bio-token {{
+        .bio-token, .protein-token {{
             min-width: 28px;
             height: 28px;
             border-radius: 8px;
@@ -140,9 +141,14 @@ def render_transcription_result(result, stop_codons):
             justify-content: center;
             background: #0B2454;
             color: #FFFFFF !important;
-            font-weight: 900;
+            font-weight: 900 !important;
             font-size: 12px;
             box-shadow: inset 0 -2px 0 rgba(255, 255, 255, .12);
+        }}
+        /* Force high-contrast inside genomic sequence containers */
+        .bio-node .bio-token, .bio-node-rna .bio-token, .bio-node-protein .protein-token, .bio-process-grid .bio-step {{
+            color: #FFFFFF !important;
+            font-weight: 700 !important;
         }}
 
         .bio-arrow {{
@@ -179,16 +185,17 @@ def render_transcription_result(result, stop_codons):
         }}
 
         .bio-step {{
-            display: flex;
+            display: inline-flex;
             gap: .65rem;
-            align-items: flex-start;
-            color: #334155;
-            background: #F8FAFC;
-            border: 1px solid #E2E8F0;
+            align-items: center;
+            color: #FFFFFF !important;
+            background: linear-gradient(90deg, #0B2454 0%, #071233 100%);
+            border: 1px solid rgba(11,36,84,0.6);
             border-radius: 12px;
             padding: .8rem;
             font-size: 13.5px;
             line-height: 1.35;
+            white-space: normal;
         }}
 
         .bio-step-index {{
@@ -198,18 +205,22 @@ def render_transcription_result(result, stop_codons):
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: #0B2454;
+            background: linear-gradient(135deg, #3B82F6, #8B5CF6);
             color: #FFFFFF !important;
             font-size: 12px;
             font-weight: 900;
             flex: 0 0 auto;
+            box-shadow: 0 6px 14px rgba(59,130,246,0.12);
         }}
 
         .stop-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            display: flex;
             gap: .75rem;
             margin-top: 1rem;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 0.5rem;
+            -webkit-overflow-scrolling: touch;
         }}
 
         .stop-card, .bio-empty-state {{
@@ -358,6 +369,21 @@ def transcription_page():
         stop_codons = find_stop_codons(result["rna"])
 
         render_transcription_result(result, stop_codons)
+
+        # Register progress only when an actual transcription analysis was executed
+        if not st.session_state.get("completed_transcription", False):
+            increment = 15
+            st.session_state.progress = min(100, st.session_state.get("progress", 0) + increment)
+            st.session_state.completed_transcription = True
+            user = st.session_state.get("user", {})
+            if isinstance(user, dict) and "email" in user:
+                from services.progress_service import save_user_progress
+                save_user_progress(
+                    user["email"],
+                    st.session_state.progress,
+                    st.session_state.get("streak", 1),
+                    st.session_state.get("badges", 0)
+                )
 
         if ncbi_data:
             st.subheader("Información NCBI / FASTA")

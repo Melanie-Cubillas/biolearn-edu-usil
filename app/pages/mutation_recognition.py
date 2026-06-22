@@ -249,6 +249,21 @@ def mutation_recognition_page():
         for step in result["steps"]:
             st.write(step)
 
+        # Register progress only after a mutation recognition analysis has completed
+        if not st.session_state.get("completed_mutation", False):
+            increment = 20
+            st.session_state.progress = min(100, st.session_state.get("progress", 0) + increment)
+            st.session_state.completed_mutation = True
+            user = st.session_state.get("user", {})
+            if isinstance(user, dict) and "email" in user:
+                from services.progress_service import save_user_progress
+                save_user_progress(
+                    user["email"],
+                    st.session_state.progress,
+                    st.session_state.get("streak", 1),
+                    st.session_state.get("badges", 0)
+                )
+
         if ncbi_data:
             st.subheader("Información NCBI / FASTA")
             st.write(f"ID de acceso: {ncbi_data['id']}")

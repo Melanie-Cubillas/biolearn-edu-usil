@@ -151,17 +151,8 @@ def disease_card(disease):
 
     if st.button("Aprender", key=f"learn_{disease['key']}", use_container_width=True):
         st.session_state.selected_disease = disease["key"]
-        new_progress = max(st.session_state.get("progress", 0), 20)
-        st.session_state.progress = new_progress
-        user = st.session_state.get("user", {})
-        if isinstance(user, dict) and "email" in user:
-            from services.progress_service import save_user_progress
-            save_user_progress(
-                user["email"],
-                new_progress,
-                st.session_state.get("streak", 1),
-                st.session_state.get("badges", 0)
-            )
+        # Do not mark progress on simple navigation. Progress increments only after
+        # the user performs an analysis or completes an interactive task in the module.
         st.session_state.page = "disease_detail"
         st.rerun()
 

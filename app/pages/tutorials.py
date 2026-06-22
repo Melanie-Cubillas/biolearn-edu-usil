@@ -388,17 +388,8 @@ def tutorials_page():
                 """, unsafe_allow_html=True)
                 if st.button("Iniciar lectura", key=f"start_{key1}", use_container_width=True, type="secondary"):
                     st.session_state.active_tutorial = key1
-                    new_progress = max(st.session_state.get("progress", 0), 15)
-                    st.session_state.progress = new_progress
-                    user = st.session_state.get("user", {})
-                    if isinstance(user, dict) and "email" in user:
-                        from services.progress_service import save_user_progress
-                        save_user_progress(
-                            user["email"],
-                            new_progress,
-                            st.session_state.get("streak", 1),
-                            st.session_state.get("badges", 0)
-                        )
+                    # Do not award progress for opening a tutorial. Progress is granted
+                    # when the user completes interactive steps or finishes the tutorial.
                     st.rerun()
             
             if i + 1 < len(keys):
@@ -416,17 +407,8 @@ def tutorials_page():
                     """, unsafe_allow_html=True)
                     if st.button("Iniciar lectura", key=f"start_{key2}", use_container_width=True, type="secondary"):
                         st.session_state.active_tutorial = key2
-                        new_progress = max(st.session_state.get("progress", 0), 15)
-                        st.session_state.progress = new_progress
-                        user = st.session_state.get("user", {})
-                        if isinstance(user, dict) and "email" in user:
-                            from services.progress_service import save_user_progress
-                            save_user_progress(
-                                user["email"],
-                                new_progress,
-                                st.session_state.get("streak", 1),
-                                st.session_state.get("badges", 0)
-                            )
+                        # Do not award progress for opening a tutorial. Progress is granted
+                        # when the user completes interactive steps or finishes the tutorial.
                         st.rerun()
 
         st.markdown("<br>", unsafe_allow_html=True)
